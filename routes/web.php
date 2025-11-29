@@ -27,6 +27,7 @@ Route::middleware(['auth'])->group(function () {
     Route::view('/dashboard', 'dashboard')->name('dashboard');
     Route::view('/instructionspeed', 'livewire.tests.instructions')->name('instructionspeed');
     Route::view('/instructionEnergy', 'livewire.tests.instructions-energy')->name('instructionEnergy');
+    Route::view('/instructionCapacity', 'livewire.tests.instructions-capacity')->name('instructionCapacity');
     
     // Test routes
     Route::get('/test/speed', SpeedTask::class)->name('test.speed');
