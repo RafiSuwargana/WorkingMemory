@@ -53,14 +53,14 @@
         <!-- Submit Button -->
         <button type="button" 
                 wire:click="login"
-                class="w-full py-4 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none disabled:opacity-50 transition font-medium text-lg"
+                class="w-full py-4 bg-gradient-to-r from-blue-800 via-blue-700 to-blue-900 text-white rounded-xl hover:from-blue-900 hover:via-blue-800 hover:to-blue-950 focus:outline-none disabled:opacity-50 transition font-semibold text-lg shadow-lg"
                 wire:loading.attr="disabled"
                 wire:target="login">
             <span wire:loading.remove wire:target="login">
                 LOGIN SEKARANG
             </span>
             <span wire:loading wire:target="login">
-                ⏳ Logging in...
+                Sedang login...
             </span>
         </button>
     </div>

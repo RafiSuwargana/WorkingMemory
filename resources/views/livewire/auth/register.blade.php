@@ -91,14 +91,14 @@
         <!-- Submit Button -->
         <button type="button" 
                 wire:click="register"
-                class="w-full py-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-xl hover:from-blue-700 hover:to-purple-700 focus:outline-none disabled:opacity-50 transition font-semibold text-lg shadow-lg"
+                class="w-full py-4 bg-gradient-to-r from-blue-800 via-blue-700 to-blue-900 text-white rounded-xl hover:from-blue-900 hover:via-blue-800 hover:to-blue-950 focus:outline-none disabled:opacity-50 transition font-semibold text-lg shadow-lg"
                 wire:loading.attr="disabled"
                 wire:target="register">
             <span wire:loading.remove wire:target="register">
                 DAFTAR SEKARANG
             </span>
             <span wire:loading wire:target="register">
-                ⏳ Sedang mendaftar...
+                Sedang mendaftar...
             </span>
         </button>
     </div>
