@@ -10,70 +10,77 @@
             background-color: #f5f5f5;
             margin: 0;
             padding: 0;
-            line-height: 1.6;
-            min-height: 100vh;
+            line-height: 1.4;
+            height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
+            overflow: hidden;
         }
         .container {
             max-width: 900px;
             width: 90%;
+            height: 85vh;
             background-color: white;
-            padding: 40px;
+            padding: 20px 40px;
             border-radius: 10px;
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
             text-align: center;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
         }
         h1 {
             color: #333;
-            margin-bottom: 30px;
+            margin-bottom: 15px;
+            font-size: 2em;
             font-size: 32px;
             font-weight: bold;
         }
         .step {
             background-color: #f8f9fa;
             border: 2px solid #e9ecef;
-            border-radius: 10px;
-            padding: 25px;
-            margin: 25px 0;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 15px 0;
             text-align: left;
         }
         .step-number {
             background-color: #007bff;
             color: white;
-            width: 40px;
-            height: 40px;
+            width: 30px;
+            height: 30px;
             border-radius: 50%;
             display: inline-flex;
             align-items: center;
             justify-content: center;
             font-weight: bold;
-            font-size: 18px;
-            margin-bottom: 15px;
+            font-size: 14px;
+            margin-bottom: 10px;
         }
         .step-content {
-            font-size: 16px;
+            font-size: 14px;
             color: #444;
-            line-height: 1.8;
+            line-height: 1.4;
         }
         .example-images {
             display: flex;
             justify-content: center;
-            gap: 30px;
-            margin: 20px 0;
+            gap: 20px;
+            margin: 10px 0;
             align-items: center;
         }
         .image-box {
-            width: 120px;
-            height: 120px;
+            width: 80px;
+            height: 80px;
             background-color: #e9ecef;
             border: 2px solid #6c757d;
-            border-radius: 10px;
+            border-radius: 8px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 14px;
+            font-size: 12px;
             color: #6c757d;
             position: relative;
         }
@@ -99,11 +106,11 @@
         .start-instruction {
             background-color: #28a745;
             color: white;
-            padding: 20px;
-            border-radius: 10px;
-            font-size: 20px;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 14px;
             font-weight: bold;
-            margin-top: 30px;
+            margin-top: 10px;
         }
         .logout-link {
             position: absolute;
@@ -187,7 +194,7 @@
                 </div>
             </div>
             
-            <p style="margin-top: 15px; color: #007bff; font-weight: bold;">
+            <p style="margin-top: 8px; color: #007bff; font-weight: bold; font-size: 13px; line-height: 1.3;">
                 Pada contoh di bawah ini, gambar nomor 1 adalah jawaban yang benar karena sama seperti gambar nomor dua pada kemunculan sebelumnya.
             </p>
         </div>
