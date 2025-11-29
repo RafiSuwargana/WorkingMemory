@@ -4,7 +4,7 @@ namespace App\Livewire\Tests;
 
 use Livewire\Component;
 
-class Instructions extends Component
+class InstructionsSpeed extends Component
 {
     public function startSpeedTask()
     {
@@ -18,6 +18,6 @@ class Instructions extends Component
 
     public function render()
     {
-        return view('livewire.tests.instructions');
+        return view('livewire.tests.instructions-speed');
     }
 }

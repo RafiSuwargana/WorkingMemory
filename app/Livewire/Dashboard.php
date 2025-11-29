@@ -19,7 +19,7 @@ class Dashboard extends Component
 
     public function startTests()
     {
-        return redirect()->route('instructions');
+        return redirect()->route('instructionspeed');
     }
 
     public function render()

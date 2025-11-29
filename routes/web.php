@@ -5,7 +5,7 @@ use Illuminate\Support\Facades\Auth;
 use App\Livewire\Auth\Login;
 use App\Livewire\Auth\Register;
 use App\Livewire\Dashboard;
-use App\Livewire\Tests\Instructions;
+use App\Livewire\Tests\InstructionsSpeed;
 use App\Livewire\Tests\SpeedTask;
 use App\Livewire\Tests\EnergyTask;
 use App\Livewire\Tests\CapacityTask;
@@ -25,7 +25,7 @@ Route::view('/register', 'auth.register-simple')->name('register')->middleware('
 // Authenticated routes
 Route::middleware(['auth'])->group(function () {
     Route::view('/dashboard', 'dashboard')->name('dashboard');
-    Route::view('/instructionspeed', 'livewire.tests.instructions')->name('instructionspeed');
+    Route::view('/instructionspeed', 'livewire.tests.instructions-speed')->name('instructionspeed');
     Route::view('/instructionEnergy', 'livewire.tests.instructions-energy')->name('instructionEnergy');
     Route::view('/instructionCapacity', 'livewire.tests.instructions-capacity')->name('instructionCapacity');
     
