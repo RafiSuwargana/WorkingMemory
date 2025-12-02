@@ -11,7 +11,7 @@ use App\Livewire\Tests\EnergyTask;
 use App\Livewire\Tests\CapacityTask;
 
 // Landing page - redirect to dashboard if already logged in
-Route::get('/', function() {
+Route::get('/', function () {
     if (Auth::check()) {
         return redirect()->route('dashboard');
     }
@@ -24,18 +24,36 @@ Route::view('/register', 'auth.register-simple')->name('register')->middleware('
 
 // Authenticated routes
 Route::middleware(['auth'])->group(function () {
-    Route::view('/dashboard', 'dashboard')->name('dashboard');
-    Route::view('/instructionspeed', 'livewire.tests.instructions-speed')->name('instructionspeed');
-    Route::view('/instructionEnergy', 'livewire.tests.instructions-energy')->name('instructionEnergy');
-    Route::view('/instructionCapacity', 'livewire.tests.instructions-capacity')->name('instructionCapacity');
-    
-    // Test routes
-    Route::get('/test/speed', SpeedTask::class)->name('test.speed');
-    Route::get('/test/energy', EnergyTask::class)->name('test.energy');
-    Route::get('/test/capacity', CapacityTask::class)->name('test.capacity');
-    
+    Route::get('/dashboard', Dashboard::class)->name('dashboard');
+
+    // Instruction routes with access control
+    Route::view('/instructionspeed', 'livewire.tests.instructions-speed')
+        ->name('instructionspeed')
+        ->middleware('test.access:speed,instruction');
+
+    Route::view('/instructionEnergy', 'livewire.tests.instructions-energy')
+        ->name('instructionEnergy')
+        ->middleware('test.access:energy,instruction');
+
+    Route::view('/instructionCapacity', 'livewire.tests.instructions-capacity')
+        ->name('instructionCapacity')
+        ->middleware('test.access:capacity,instruction');
+
+    // Test routes with access control
+    Route::get('/test/speed', SpeedTask::class)
+        ->name('test.speed')
+        ->middleware('test.access:speed');
+
+    Route::get('/test/energy', EnergyTask::class)
+        ->name('test.energy')
+        ->middleware('test.access:energy');
+
+    Route::get('/test/capacity', CapacityTask::class)
+        ->name('test.capacity')
+        ->middleware('test.access:capacity');
+
     // Logout route
-    Route::get('/logout', function() {
+    Route::get('/logout', function () {
         Auth::logout();
         session()->invalidate();
         session()->regenerateToken();
@@ -43,8 +61,8 @@ Route::middleware(['auth'])->group(function () {
     })->name('logout');
 });
 
-Route::view('profile', 'profile')
-    ->middleware(['auth'])
-    ->name('profile');
+// Route::get('/profile', 'profile')
+//     ->middleware(['auth'])
+//     ->name('profile');
 
-require __DIR__.'/auth.php';
+require __DIR__ . '/auth.php';

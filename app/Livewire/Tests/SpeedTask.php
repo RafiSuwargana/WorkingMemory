@@ -3,32 +3,41 @@
 namespace App\Livewire\Tests;
 
 use Livewire\Component;
+use Livewire\Attributes\Layout;
 use App\Models\TestSession;
 use App\Models\TestResult;
 use App\Models\TestAnswer;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 
+#[Layout('components.layouts.app')]
 class SpeedTask extends Component
 {
     protected $listeners = ['spacePressed' => 'handleSpacePress', 'numberPressed' => 'handleAnswer'];
-    
+
     public $currentQuestion = 1;
     public $totalQuestions = 50;
     public $simulationQuestions = 3;
-    
+
     public $isSimulation = true;
     public $isCompleted = false;
     public $isTransition = false;
-    
+
     public $currentImages = [];
     public $correctAnswer = null;
-    
+
     public $answered = false;
     public $userAnswer = null;
-    
+
     public $totalCorrect = 0;
     public $accuracy = 0;
+    public $showFeedback = false;
+    public $feedbackType = null; // 'correct', 'wrong', 'timeout'
+    public $timeoutOccurred = false;
+    public $inputDisabled = false;
+    public $questionStartTime = null;
+    public $debugTimer = false; // For local debugging
+    public $remainingTime = 1200; // Debug timer countdown
 
     public $testSession;
 
@@ -86,24 +95,127 @@ class SpeedTask extends Component
         ['shape_target' => 6, 'shape_distractor' => 9, 'correct_response' => 2],
     ];
 
+    public static function getNextTestType($userId)
+    {
+        // Check completion status in order
+        $speedCompleted = TestSession::where('user_id', $userId)
+            ->where('test_type', 'speed')
+            ->where('status', 'completed')
+            ->exists();
+
+        if (!$speedCompleted) {
+            return 'speed';
+        }
+
+        $energyCompleted = TestSession::where('user_id', $userId)
+            ->where('test_type', 'energy')
+            ->where('status', 'completed')
+            ->exists();
+
+        if (!$energyCompleted) {
+            return 'energy';
+        }
+
+        $capacityCompleted = TestSession::where('user_id', $userId)
+            ->where('test_type', 'capacity')
+            ->where('status', 'completed')
+            ->exists();
+
+        if (!$capacityCompleted) {
+            return 'capacity';
+        }
+
+        return null; // All tests completed
+    }
+
+    private function resumeSession()
+    {
+        // Count only real test results (simulation not saved to DB)
+        $realTestResults = TestResult::where('test_session_id', $this->testSession->id)
+            ->whereJsonContains('question_data->is_simulation', false)
+            ->count();
+
+        $this->totalCorrect = TestResult::where('test_session_id', $this->testSession->id)
+            ->where('is_correct', true)
+            ->whereJsonContains('question_data->is_simulation', false)
+            ->count();
+
+        // Determine current state based on real test results only
+        if ($realTestResults == 0) {
+            // No real test results yet - could be in simulation or transition
+            // Start from simulation since we don't track simulation progress
+            $this->isSimulation = true;
+            $this->currentQuestion = 1;
+            $this->isTransition = false;
+        } else {
+            // In real test
+            $this->isSimulation = false;
+            $this->isTransition = false;
+            $this->currentQuestion = $realTestResults + 1;
+
+            // Check if test should be complete
+            if ($this->currentQuestion > $this->totalQuestions) {
+                $this->completeTest();
+                return;
+            }
+        }
+
+        $this->answered = false;
+    }
+
     public function mount()
     {
         Log::info('=== MOUNT START ===');
-        
-        // Ensure we start with simulation
-        $this->isSimulation = true;
-        $this->currentQuestion = 1;
-        $this->answered = false;
-        
-        Log::info('After setting properties - isSimulation: ' . ($this->isSimulation ? 'true' : 'false') . ', currentQuestion: ' . $this->currentQuestion);
-        
-        $this->testSession = TestSession::create([
-            'user_id' => Auth::id(),
-            'test_type' => 'speed',
-            'status' => 'in_progress',
-            'started_at' => now(),
-        ]);
-        
+
+        // Check for existing in-progress session
+        $existingSession = TestSession::where('user_id', Auth::id())
+            ->where('test_type', 'speed')
+            ->where('status', 'in_progress')
+            ->first();
+
+        if ($existingSession) {
+            // Delete existing session and its results for fresh start
+            Log::info('Found existing session, deleting for fresh start');
+
+            // Delete any existing results
+            TestResult::where('test_session_id', $existingSession->id)->delete();
+
+            // Delete the session
+            $existingSession->delete();
+
+            // Create new session
+            $this->testSession = TestSession::create([
+                'user_id' => Auth::id(),
+                'test_type' => 'speed',
+                'status' => 'in_progress',
+                'started_at' => now(),
+                'total_questions' => $this->totalQuestions,
+            ]);
+
+            // Start fresh
+            $this->isSimulation = true;
+            $this->currentQuestion = 1;
+            $this->answered = false;
+
+            Log::info('Deleted old session, created new one');
+        } else {
+            // Create new session
+            $this->testSession = TestSession::create([
+                'user_id' => Auth::id(),
+                'test_type' => 'speed',
+                'status' => 'in_progress',
+                'started_at' => now(),
+                'total_questions' => $this->totalQuestions,
+            ]);
+
+            // Start fresh
+            $this->isSimulation = true;
+            $this->currentQuestion = 1;
+            $this->answered = false;
+        }
+
+        $this->inputDisabled = false;
+        $this->debugTimer = config('app.env') === 'local';
         $this->loadQuestion();
         Log::info('Speed test mounted - Question: ' . $this->currentQuestion . ', Simulation: ' . ($this->isSimulation ? 'true' : 'false'));
         Log::info('=== MOUNT END ===');
@@ -112,17 +224,19 @@ class SpeedTask extends Component
     public function loadQuestion()
     {
         Log::info('Loading question - Q' . $this->currentQuestion . ', Simulation: ' . ($this->isSimulation ? 'true' : 'false'));
-        
+
         if ($this->isSimulation) {
             // Simulation questions
             if ($this->currentQuestion == 1) {
                 $this->currentImages = [13, 3]; // Simulasi 1
+                $this->correctAnswer = null; // No scoring for Q1
             } elseif ($this->currentQuestion == 2) {
                 $this->currentImages = [13, 4]; // Simulasi 2 - 13 from previous
+                $this->correctAnswer = 1; // 13 is from previous question, position 1
             } elseif ($this->currentQuestion == 3) {
                 $this->currentImages = [10, 4]; // Simulasi 3
+                $this->correctAnswer = 2; // Set correct answer for demo feedback
             }
-            $this->correctAnswer = null; // No scoring in simulation
         } else {
             // Real test questions
             $questionIndex = $this->currentQuestion - 1;
@@ -131,7 +245,7 @@ class SpeedTask extends Component
                 $shapeTarget = $data['shape_target'];
                 $shapeDistractor = $data['shape_distractor'];
                 $correctResponse = $data['correct_response'];
-                
+
                 // Position images based on correct_response
                 if ($correctResponse == 1) {
                     $this->currentImages = [$shapeTarget, $shapeDistractor];
@@ -142,22 +256,38 @@ class SpeedTask extends Component
                 }
             }
         }
-        
+
         // Reset answer state
         $this->answered = false;
         $this->userAnswer = null;
-        
+        $this->inputDisabled = false;
+        $this->questionStartTime = microtime(true);
+
         Log::info('Question loaded - Images: [' . implode(', ', $this->currentImages) . '], Correct: ' . $this->correctAnswer);
+
+        // Dispatch event to start timer for real questions, but not during feedback
+        if (!$this->isSimulation && !$this->isTransition && !$this->isCompleted && !$this->showFeedback) {
+            $this->dispatch('question-loaded');
+        }
     }
 
     public function handleSpacePress()
     {
         if ($this->isCompleted) {
-            return redirect('http://127.0.0.1:8000/instructionEnergy');
+            // Force refresh the session status from database
+            $this->testSession->refresh();
+
+            $nextTest = self::getNextTestType(Auth::id());
+            if ($nextTest === 'energy') {
+                return redirect()->route('instructionEnergy');
+            } else {
+                return redirect()->route('dashboard');
+            }
         }
-        
+
         // Hanya untuk simulasi Q1 saja
-        if ($this->isSimulation && $this->currentQuestion == 1) {
+        if ($this->isSimulation && $this->currentQuestion == 1 && !$this->inputDisabled) {
+            $this->inputDisabled = true;
             $this->currentQuestion++;
             $this->answered = false;
             $this->userAnswer = null;
@@ -183,34 +313,81 @@ class SpeedTask extends Component
         $this->dispatch('$refresh');
     }
 
-    public function handleAnswer($position)
+    public function handleTimeout()
     {
-        if ($this->answered && !$this->isTransition) {
-            return; // Prevent multiple answers (kecuali di transisi)
-        }
-        
-        // Handle transisi - dari transisi ke tes sesungguhnya
-        if ($this->isTransition) {
-            $this->isTransition = false;
-            $this->currentQuestion = 1;
-            $this->answered = false;
-            $this->userAnswer = null;
-            $this->loadQuestion();
+        if ($this->inputDisabled || $this->answered || $this->isSimulation || $this->isTransition || $this->isCompleted) {
             return;
         }
-        
+
+        $this->inputDisabled = true;
+        $this->answered = true;
+        $this->timeoutOccurred = true;
+        $this->feedbackType = 'timeout';
+
+        // Save timeout result
+        TestResult::create([
+            'test_session_id' => $this->testSession->id,
+            'question_number' => $this->currentQuestion,
+            'question_data' => [
+                'images' => $this->currentImages,
+                'is_simulation' => false,
+            ],
+            'correct_answer' => $this->correctAnswer,
+            'user_answer' => null,
+            'is_correct' => false,
+            'response_time' => 1200, // 1.2 seconds
+            'timeout' => true,
+            'question_started_at' => now()->subMilliseconds(1200),
+            'answered_at' => now(),
+        ]);
+
+        // Update session total time
+        $this->updateSessionTotalTime();
+
+        $this->showFeedback = true;
+        $this->dispatch('show-feedback');
+    }
+
+    public function handleAnswer($position)
+    {
+        if ($this->inputDisabled || ($this->answered && !$this->isTransition)) {
+            return; // Prevent multiple answers and disabled input
+        }
+
+        // Disable input immediately
+        $this->inputDisabled = true;
+
+        // Handle transisi - keyboard input untuk restart simulasi saja
+        if ($this->isTransition) {
+            if ($position == 1) {
+                // Restart simulation
+                $this->restartSimulation();
+                return;
+            }
+            // Keyboard input 2 tidak melakukan apa-apa, karena tombol yang handle proceed
+            return;
+        }
+
         $this->answered = true;
         $this->userAnswer = $position;
-        
+        $this->timeoutOccurred = false;
+
+        // Calculate response time
+        $responseTime = ($this->questionStartTime) ?
+            round((microtime(true) - $this->questionStartTime) * 1000) : 0;
+
         if (!$this->isSimulation) {
             // Real question - save and score
             $isCorrect = ($position == $this->correctAnswer);
             if ($isCorrect) {
                 $this->totalCorrect++;
+                $this->feedbackType = 'correct';
+            } else {
+                $this->feedbackType = 'wrong';
             }
-            
+
             // Save to database
-            TestResult::create([
+            $testResult = TestResult::create([
                 'test_session_id' => $this->testSession->id,
                 'question_number' => $this->currentQuestion,
                 'question_data' => [
@@ -220,16 +397,90 @@ class SpeedTask extends Component
                 'correct_answer' => $this->correctAnswer,
                 'user_answer' => $position,
                 'is_correct' => $isCorrect,
-                'response_time' => 0,
+                'response_time' => $responseTime,
                 'timeout' => false,
-                'question_started_at' => now(),
+                'question_started_at' => now()->subMilliseconds($responseTime),
                 'answered_at' => now(),
             ]);
+
+            // Update session total time
+            $this->updateSessionTotalTime();
+
+            // Show feedback
+            $this->showFeedback = true;
+            $this->dispatch('show-feedback');
+            return;
         }
-        
+
+        // For simulation question 2-3, check if answer is correct
+        if ($this->isSimulation && ($this->currentQuestion == 2 || $this->currentQuestion == 3)) {
+            $isCorrect = ($position == $this->correctAnswer);
+
+            if ($isCorrect) {
+                $this->feedbackType = 'correct';
+                // Show feedback and then proceed
+                $this->showFeedback = true;
+                $this->dispatch('show-feedback');
+            } else {
+                $this->feedbackType = 'wrong';
+                // Show feedback but don't proceed, reset to try again
+                $this->showFeedback = true;
+                $this->dispatch('show-feedback-retry');
+            }
+            return;
+        }
+
+        // For simulation question 1, auto advance without feedback
+        $this->proceedAfterFeedback();
+    }
+
+    public function nextQuestion()
+    {
+        $this->currentQuestion++;
+        Log::info('Moving to question: ' . $this->currentQuestion);
+
+        // Check if simulation complete
+        if ($this->isSimulation && $this->currentQuestion > $this->simulationQuestions) {
+            $this->isSimulation = false;
+            $this->currentQuestion = 1; // Start real test at Q1
+            Log::info('Simulation complete, starting real test');
+        }
+
+        // Check if test complete
+        if (!$this->isSimulation && $this->currentQuestion > $this->totalQuestions) {
+            $this->completeTest();
+            return;
+        }
+
+        // Reset answered state
+        $this->answered = false;
+        $this->userAnswer = null;
+
+        // Load next question
+        $this->loadQuestion();
+
+        Log::info('Question updated - Current Q: ' . $this->currentQuestion . ', Simulation: ' . ($this->isSimulation ? 'true' : 'false'));
+    }
+
+    private function updateSessionTotalTime()
+    {
+        $totalTime = TestResult::where('test_session_id', $this->testSession->id)
+            ->whereJsonContains('question_data->is_simulation', false)
+            ->sum('response_time');
+
+        $this->testSession->update([
+            'total_time' => $totalTime
+        ]);
+    }
+
+    public function proceedAfterFeedback()
+    {
+        $this->showFeedback = false;
+        $this->feedbackType = null;
+
         // Auto advance untuk simulasi dan tes sesungguhnya
         $this->currentQuestion++;
-        
+
         if ($this->isSimulation && $this->currentQuestion > $this->simulationQuestions) {
             // Setelah simulasi selesai, masuk ke state transisi
             $this->isSimulation = false;
@@ -237,61 +488,87 @@ class SpeedTask extends Component
             $this->currentQuestion = 1;
             $this->answered = false;
             $this->userAnswer = null;
+            $this->inputDisabled = false;
             // Tidak load question, tampilkan transisi dulu
             return;
         }
-        
+
         if (!$this->isSimulation && !$this->isTransition && $this->currentQuestion > $this->totalQuestions) {
             $this->completeTest();
             return;
         }
-        
+
         $this->answered = false;
         $this->userAnswer = null;
         $this->loadQuestion();
     }
 
-    public function nextQuestion()
+    public function proceedAfterRetry()
     {
-        $this->currentQuestion++;
-        Log::info('Moving to question: ' . $this->currentQuestion);
-        
-        // Check if simulation complete
-        if ($this->isSimulation && $this->currentQuestion > $this->simulationQuestions) {
-            $this->isSimulation = false;
-            $this->currentQuestion = 1; // Start real test at Q1
-            Log::info('Simulation complete, starting real test');
-        }
-        
-        // Check if test complete
-        if (!$this->isSimulation && $this->currentQuestion > $this->totalQuestions) {
-            $this->completeTest();
-            return;
-        }
-        
-        // Reset answered state
+        $this->showFeedback = false;
+        $this->feedbackType = null;
         $this->answered = false;
         $this->userAnswer = null;
-        
-        // Load next question
+        $this->inputDisabled = false;
+
+        // Reset the same question to try again
         $this->loadQuestion();
-        
-        Log::info('Question updated - Current Q: ' . $this->currentQuestion . ', Simulation: ' . ($this->isSimulation ? 'true' : 'false'));
     }
 
+    public function restartSimulation()
+    {
+        // Reset to beginning of simulation
+        $this->isSimulation = true;
+        $this->isTransition = false;
+        $this->currentQuestion = 1;
+        $this->answered = false;
+        $this->userAnswer = null;
+        $this->inputDisabled = false;
+        $this->showFeedback = false;
+        $this->feedbackType = null;
+
+        $this->loadQuestion();
+    }
+
+    public function proceedToRealTest()
+    {
+        // Proceed directly to real test from transition
+        $this->isTransition = false;
+        $this->isSimulation = false;
+        $this->currentQuestion = 1;
+        $this->answered = false;
+        $this->userAnswer = null;
+        $this->inputDisabled = false;
+        $this->showFeedback = false;
+        $this->feedbackType = null;
+
+        $this->loadQuestion();
+        // Force refresh the component state
+        $this->dispatch('$refresh');
+    }
     public function completeTest()
     {
         $this->isCompleted = true;
         $this->accuracy = round(($this->totalCorrect / $this->totalQuestions) * 100, 1);
-        
+
+        // Calculate final statistics
+        $avgResponseTime = TestResult::where('test_session_id', $this->testSession->id)
+            ->whereJsonContains('question_data->is_simulation', false)
+            ->avg('response_time');
+
+        // Update session total time
+        $this->updateSessionTotalTime();
+
         // Update test session
         $this->testSession->update([
             'status' => 'completed',
             'completed_at' => now(),
-            'total_score' => $this->totalCorrect,
-            'accuracy_percentage' => $this->accuracy,
+            'total_questions' => $this->totalQuestions,
+            'correct_answers' => $this->totalCorrect,
+            'wrong_answers' => $this->totalQuestions - $this->totalCorrect,
+            'average_response_time' => $avgResponseTime ?: 0,
         ]);
-        
+
         Log::info('Test completed - Score: ' . $this->totalCorrect . '/' . $this->totalQuestions . ' (' . $this->accuracy . '%)');
     }
 
