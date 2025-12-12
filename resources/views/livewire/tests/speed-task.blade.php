@@ -112,9 +112,9 @@
             @if($feedbackType === 'correct')
             <div class="mb-6 text-center">
                 <div class="text-6xl mb-4">✓</div>
-                <h3 class="text-2xl font-bold text-green-600 mb-4">Benar!</h3>
+                <h3 class="text-3xl font-bold text-green-600 mb-4">Benar!</h3>
                 <div class="flex justify-center gap-4">
-                    <div class="w-16 h-16 border-2 border-green-500 rounded-lg flex items-center justify-center">
+                    <div class="w-20 h-20 border-2 border-green-500 rounded-lg flex items-center justify-center">
                         <img src="/images/speed/{{ $currentImages[$correctAnswer-1] }}.png" alt="Correct Answer"
                             class="max-w-full max-h-full object-contain">
                     </div>
@@ -123,18 +123,18 @@
             @elseif($feedbackType === 'wrong')
             <div class="mb-6 text-center">
                 <div class="text-6xl mb-4">✗</div>
-                <h3 class="text-2xl font-bold text-red-600 mb-4">Salah!</h3>
+                <h3 class="text-3xl font-bold text-red-600 mb-4">Salah!</h3>
                 <div class="flex justify-center gap-8">
                     <div class="text-center">
-                        <div class="text-sm text-gray-600 mb-2">Jawaban Anda:</div>
-                        <div class="w-16 h-16 border-2 border-red-500 rounded-lg flex items-center justify-center">
+                        <div class="text-base text-gray-600 mb-2">Jawaban Anda:</div>
+                        <div class="w-20 h-20 border-2 border-red-500 rounded-lg flex items-center justify-center">
                             <img src="/images/speed/{{ $currentImages[$userAnswer-1] }}.png" alt="Your Answer"
                                 class="max-w-full max-h-full object-contain">
                         </div>
                     </div>
                     <div class="text-center">
-                        <div class="text-sm text-gray-600 mb-2">Jawaban Benar:</div>
-                        <div class="w-16 h-16 border-2 border-green-500 rounded-lg flex items-center justify-center">
+                        <div class="text-base text-gray-600 mb-2">Jawaban Benar:</div>
+                        <div class="w-20 h-20 border-2 border-green-500 rounded-lg flex items-center justify-center">
                             <img src="/images/speed/{{ $currentImages[$correctAnswer-1] }}.png" alt="Correct Answer"
                                 class="max-w-full max-h-full object-contain">
                         </div>
@@ -144,11 +144,11 @@
             @elseif($feedbackType === 'timeout')
             <div class="mb-6 text-center">
                 <div class="text-6xl mb-4">⏰</div>
-                <h3 class="text-2xl font-bold text-orange-600 mb-4">Waktu Habis!</h3>
+                <h3 class="text-3xl font-bold text-orange-600 mb-4">Waktu Habis!</h3>
                 <div class="text-center">
-                    <div class="text-sm text-gray-600 mb-2">Jawaban Benar:</div>
+                    <div class="text-base text-gray-600 mb-2">Jawaban Benar:</div>
                     <div
-                        class="w-16 h-16 border-2 border-green-500 rounded-lg flex items-center justify-center mx-auto">
+                        class="w-20 h-20 border-2 border-green-500 rounded-lg flex items-center justify-center mx-auto">
                         <img src="/images/speed/{{ $currentImages[$correctAnswer-1] }}.png" alt="Correct Answer"
                             class="max-w-full max-h-full object-contain">
                     </div>
@@ -162,22 +162,22 @@
         <div class="w-full flex flex-col items-center justify-center text-center mb-4">
             <div class="mb-6 w-full flex flex-col items-center">
                 <div class="mb-6 text-center">
-                    <h3 class="text-xl font-bold text-gray-800 mb-4">
+                    <h3 class="text-2xl font-bold text-gray-800 mb-4">
                         Jawaban kamu: {{ $totalCorrect }}/50
                     </h3>
-                    <p class="text-lg text-gray-700 mb-2">
+                    <p class="text-xl text-gray-700 mb-2">
                         Tingkat Akurasi: {{ $accuracy }}%
                     </p>
-                    <p class="text-lg text-gray-700 mb-4">
+                    <p class="text-xl text-gray-700 mb-4">
                         Total Waktu: {{ number_format($testSession->total_time / 1000, 1) }} detik
                     </p>
                 </div>
 
                 <div class="text-center">
-                    <p class="text-lg text-gray-700 mb-4">
+                    <p class="text-xl text-gray-700 mb-4">
                         Terimakasih telah berpartisipasi!
                     </p>
-                    <p class="text-gray-600">Klik Spasi untuk menuju tes berikutnya!</p>
+                    <p class="text-lg text-gray-600">Klik Spasi untuk menuju tes berikutnya!</p>
                 </div>
             </div>
         </div>
@@ -185,12 +185,12 @@
         @elseif($isTransition)
         <!-- Transition Phase -->
         <div class="w-full flex flex-col items-center justify-center text-center mb-4">
-            <h2 class="text-xl font-bold text-gray-800 mb-6">
+            <h2 class="text-2xl font-bold text-gray-800 mb-6">
                 Sudah mengerti cara mainnya?
             </h2>
 
             <div class="mb-6 text-center">
-                <p class="text-lg text-gray-700 mb-4">
+                <p class="text-xl text-gray-700 mb-4">
                     Setelah ini Anda harus menjawab dengan cepat!
                 </p>
             </div>
@@ -199,18 +199,18 @@
             <div class="flex justify-center items-center gap-8 mb-6">
                 <!-- Image 1 -->
                 <div class="text-center">
-                    <div class="w-24 h-24 border-2 border-gray-300 rounded-lg mb-2 flex items-center justify-center">
+                    <div class="w-32 h-32 border-2 border-gray-300 rounded-lg mb-2 flex items-center justify-center">
                         <img src="/images/speed/1.png" alt="Gambar 1" class="max-w-full max-h-full object-contain">
                     </div>
-                    <div class="text-lg font-bold">1</div>
+                    <div class="text-xl font-bold">1</div>
                 </div>
 
                 <!-- Image 2 -->
                 <div class="text-center">
-                    <div class="w-24 h-24 border-2 border-gray-300 rounded-lg mb-2 flex items-center justify-center">
+                    <div class="w-32 h-32 border-2 border-gray-300 rounded-lg mb-2 flex items-center justify-center">
                         <img src="/images/speed/10.png" alt="Gambar 2" class="max-w-full max-h-full object-contain">
                     </div>
-                    <div class="text-lg font-bold">2</div>
+                    <div class="text-xl font-bold">2</div>
                 </div>
             </div>
 
@@ -232,21 +232,21 @@
         @elseif($isSimulation)
         <!-- Simulation Phase -->
         <div class="w-full flex flex-col items-center justify-center text-center mb-4">
-            <h2 class="text-xl font-bold text-gray-800 mb-3">
+            <h2 class="text-2xl font-bold text-gray-800 mb-3">
                 Simulasi {{ $currentQuestion }} dari {{ $simulationQuestions }}
             </h2>
 
 
             @if($currentQuestion == 1)
-            <h3 class="text-lg text-gray-700 mb-4 text-center">
+            <h3 class="text-xl text-gray-700 mb-4 text-center">
                 Ingat kedua gambar berikut beserta posisinya! Klik spasi untuk melanjutkan!
             </h3>
             @elseif($currentQuestion == 2)
-            <h3 class="text-lg text-gray-700 mb-4 text-center">
+            <h3 class="text-xl text-gray-700 mb-4 text-center">
                 Gambar di nomor manakah yang ada pada gambar sebelumnya? Klik angka 1 atau angka 2 pada keyboard!
             </h3>
             @else
-            <h3 class="text-lg text-gray-700 mb-4 text-center">
+            <h3 class="text-xl text-gray-700 mb-4 text-center">
                 Simulasi terakhir. Klik angka 1 atau angka 2 pada keyboard!
             </h3>
             @endif
@@ -254,68 +254,68 @@
             <div class="flex justify-center items-center gap-8 mb-4">
                 <!-- Image 1 -->
                 <div class="text-center">
-                    <div class="w-24 h-24 border-2 border-gray-300 rounded-lg mb-2 flex items-center justify-center">
+                    <div class="w-32 h-32 border-2 border-gray-300 rounded-lg mb-2 flex items-center justify-center">
                         <img src="/images/speed/{{ $currentImages[0] }}.png" alt="Gambar 1"
                             class="max-w-full max-h-full object-contain">
                     </div>
-                    <div class="text-lg font-bold">1</div>
+                    <div class="text-xl font-bold">1</div>
                 </div>
 
                 <!-- Image 2 -->
                 <div class="text-center">
-                    <div class="w-24 h-24 border-2 border-gray-300 rounded-lg mb-2 flex items-center justify-center">
+                    <div class="w-32 h-32 border-2 border-gray-300 rounded-lg mb-2 flex items-center justify-center">
                         <img src="/images/speed/{{ $currentImages[1] }}.png" alt="Gambar 2"
                             class="max-w-full max-h-full object-contain">
                     </div>
-                    <div class="text-lg font-bold">2</div>
+                    <div class="text-xl font-bold">2</div>
                 </div>
             </div>
 
             @if($currentQuestion == 1)
-            <p class="text-gray-600">Tekan SPASI untuk melanjutkan</p>
+            <p class="text-lg text-gray-600">Tekan SPASI untuk melanjutkan</p>
             @else
-            <p class="text-gray-600">Klik angka 1 atau 2 pada keyboard</p>
+            <p class="text-lg text-gray-600">Klik angka 1 atau 2 pada keyboard</p>
             @endif
         </div>
 
         @else
         <!-- Real Test Phase -->
         <div class="w-full flex flex-col items-center justify-center text-center mb-4">
-            <h2 class="text-xl font-bold text-gray-800 mb-3">
+            <h2 class="text-2xl font-bold text-gray-800 mb-3">
                 Soal {{ $currentQuestion }} dari {{ $totalQuestions }}
             </h2>
 
             @if($debugTimer)
-            <div class="mb-2 p-2 bg-yellow-100 border border-yellow-300 rounded text-sm font-mono">
+            <div class="mb-2 p-2 bg-yellow-100 border border-yellow-300 rounded text-base font-mono">
                 Debug Timer: <span x-text="Math.max(0, Math.ceil(debugCountdown / 100) / 10).toFixed(1)"></span>s
             </div>
             @endif
 
-            <h3 class="text-lg text-gray-700 mb-4 text-center">
+            <h3 class="text-xl text-gray-700 mb-4 text-center">
                 Klik angka 1 atau angka 2 pada keyboard!
             </h3>
 
             <div class="flex justify-center items-center gap-8 mb-4">
                 <!-- Image 1 -->
                 <div class="text-center">
-                    <div class="w-24 h-24 border-2 border-gray-300 rounded-lg mb-2 flex items-center justify-center">
+                    <div class="w-32 h-32 border-2 border-gray-300 rounded-lg mb-2 flex items-center justify-center">
                         <img src="/images/speed/{{ $currentImages[0] }}.png" alt="Gambar 1"
                             class="max-w-full max-h-full object-contain">
                     </div>
-                    <div class="text-lg font-bold">1</div>
+                    <div class="text-xl font-bold">1</div>
                 </div>
 
                 <!-- Image 2 -->
                 <div class="text-center">
-                    <div class="w-24 h-24 border-2 border-gray-300 rounded-lg mb-2 flex items-center justify-center">
+                    <div class="w-32 h-32 border-2 border-gray-300 rounded-lg mb-2 flex items-center justify-center">
                         <img src="/images/speed/{{ $currentImages[1] }}.png" alt="Gambar 2"
                             class="max-w-full max-h-full object-contain">
                     </div>
-                    <div class="text-lg font-bold">2</div>
+                    <div class="text-xl font-bold">2</div>
                 </div>
             </div>
 
-            <p class="text-gray-600">Klik angka 1 atau 2 pada keyboard</p>
+            <p class="text-lg text-gray-600">Klik angka 1 atau 2 pada keyboard</p>
         </div>
         @endif
 

@@ -108,17 +108,17 @@
             @if($feedbackType === 'correct')
             <div class="mb-6 text-center">
                 <div class="text-6xl mb-4">✓</div>
-                <h3 class="text-2xl font-bold text-green-600 mb-4">Benar!</h3>
+                <h3 class="text-3xl font-bold text-green-600 mb-4">Benar!</h3>
             </div>
             @elseif($feedbackType === 'wrong')
             <div class="mb-6 text-center">
                 <div class="text-6xl mb-4">✗</div>
-                <h3 class="text-2xl font-bold text-red-600 mb-4">Salah!</h3>
+                <h3 class="text-3xl font-bold text-red-600 mb-4">Salah!</h3>
             </div>
             @elseif($feedbackType === 'slow')
             <div class="mb-6 text-center">
                 <div class="text-6xl mb-4">⏰</div>
-                <h3 class="text-2xl font-bold text-orange-600 mb-4">Kamu terlalu lama mengerjakan soal ini!</h3>
+                <h3 class="text-3xl font-bold text-orange-600 mb-4">Kamu terlalu lama mengerjakan soal ini!</h3>
             </div>
             @endif
         </div>
@@ -128,27 +128,27 @@
         <div class="w-full flex flex-col items-center justify-center text-center mb-4">
             <div class="mb-6 w-full flex flex-col items-center">
                 <div class="mb-6 text-center">
-                    <h3 class="text-xl font-bold text-gray-800 mb-4">
+                    <h3 class="text-2xl font-bold text-gray-800 mb-4">
                         Jawaban kamu: {{ $testSession->total_correct ?? 0 }}/{{ $totalQuestions }}
                     </h3>
-                    <p class="text-lg text-gray-700 mb-2">
+                    <p class="text-xl text-gray-700 mb-2">
                         Tingkat Akurasi: {{ $testSession->accuracy ?? 0 }}%
                     </p>
-                    <p class="text-lg text-gray-700 mb-4">
+                    <p class="text-xl text-gray-700 mb-4">
                         Total Waktu: {{ $testSession->total_time ? number_format($testSession->total_time / 1000, 1) :
                         '0' }} detik
                     </p>
                     @if($testSession->avg_response_time)
-                    <p class="text-lg text-gray-700 mb-4">
+                    <p class="text-xl text-gray-700 mb-4">
                         Rata-rata Waktu Respon: {{ number_format($testSession->avg_response_time / 1000, 2) }} detik
                     </p>
                     @endif
                 </div>
                 <div class="text-center">
-                    <p class="text-lg text-gray-700 mb-4">
+                    <p class="text-xl text-gray-700 mb-4">
                         Terimakasih telah berpartisipasi!
                     </p>
-                    <p class="text-gray-600">Klik Spasi untuk menuju tes berikutnya!</p>
+                    <p class="text-lg text-gray-600">Klik Spasi untuk menuju tes berikutnya!</p>
                 </div>
             </div>
         </div>
@@ -156,7 +156,7 @@
         @elseif($isTransition)
         <!-- Transition Phase -->
         <div class="w-full flex flex-col items-center justify-center text-center mb-4">
-            <h2 class="text-xl font-bold text-gray-800 mb-6">
+            <h2 class="text-2xl font-bold text-gray-800 mb-6">
                 Sudah mengerti cara mainnya? Lanjutkan penjumlahan...
             </h2>
 
@@ -166,7 +166,7 @@
             <!-- Sample domino card -->
             <div class="flex justify-center items-center mb-4">
                 <div class="text-center">
-                    <div class="w-32 h-32 border-2 border-gray-300 rounded-lg mb-2 flex items-center justify-center">
+                    <div class="w-40 h-40 border-2 border-gray-300 rounded-lg mb-2 flex items-center justify-center">
                         <img src="/images/energy/B1.png" alt="Contoh kartu domino"
                             class="max-w-full max-h-full object-contain">
                     </div>
@@ -191,24 +191,24 @@
         @elseif($isSimulation)
         <!-- Simulation Phase -->
         <div class="w-full flex flex-col items-center justify-center text-center mb-4">
-            <h2 class="text-xl font-bold text-gray-800 mb-3">
+            <h2 class="text-2xl font-bold text-gray-800 mb-3">
                 Simulasi {{ $currentQuestion }} dari {{ $simulationQuestions }}
             </h2>
 
             @if($currentQuestion == 1)
-            <h3 class="text-lg text-gray-700 mb-4 text-center">
+            <h3 class="text-xl text-gray-700 mb-4 text-center">
                 Ingat jumlah titik pada kartu dibawah!
             </h3>
             @elseif($currentQuestion == 2)
-            <h3 class="text-lg text-gray-700 mb-4 text-center">
+            <h3 class="text-xl text-gray-700 mb-4 text-center">
                 Jumlahkan titik kartu ini dengan jumlah titik angka pada kartu sebelumnya!
             </h3>
             @elseif($currentQuestion == 3)
-            <h3 class="text-lg text-gray-700 mb-4 text-center">
+            <h3 class="text-xl text-gray-700 mb-4 text-center">
                 Jumlahkan kartu sebelumnya dengan kartu yang ini..
             </h3>
             @else
-            <h3 class="text-lg text-gray-700 mb-4 text-center">
+            <h3 class="text-xl text-gray-700 mb-4 text-center">
                 Jumlahkan kartu sebelumnya dengan kartu yang ini..
             </h3>
             @endif
@@ -216,7 +216,7 @@
             <div class="flex justify-center items-center mb-4">
                 <!-- Single domino card -->
                 <div class="text-center">
-                    <div class="w-32 h-32 border-2 border-gray-300 rounded-lg mb-2 flex items-center justify-center">
+                    <div class="w-40 h-40 border-2 border-gray-300 rounded-lg mb-2 flex items-center justify-center">
                         <img src="/images/energy/{{ $currentImage }}.png" alt="Kartu domino"
                             class="max-w-full max-h-full object-contain">
                     </div>
@@ -224,10 +224,10 @@
             </div>
 
             @if($currentQuestion == 1)
-            <p class="text-gray-600">Klik spasi!</p>
+            <p class="text-lg text-gray-600">Klik spasi!</p>
             @else
-            <p class="text-gray-600">Ketik jawaban (angka 0-9) pada keyboard</p>
-            <p class="text-sm text-gray-500 mt-1">*Jika jawaban 2 digit, ketik angka terakhir saja (contoh: jawaban 12,
+            <p class="text-lg text-gray-600">Ketik jawaban (angka 0-9) pada keyboard</p>
+            <p class="text-base text-gray-500 mt-1">*Jika jawaban 2 digit, ketik angka terakhir saja (contoh: jawaban 12,
                 ketik 2)</p>
             @endif
         </div>
@@ -235,31 +235,31 @@
         @else
         <!-- Real Test Phase -->
         <div class="w-full flex flex-col items-center justify-center text-center mb-4">
-            <h2 class="text-xl font-bold text-gray-800 mb-3">
+            <h2 class="text-2xl font-bold text-gray-800 mb-3">
                 Soal {{ $currentQuestion }} dari {{ $totalQuestions }}
             </h2>
 
             @if($debugTimer)
-            <div class="mb-2 p-2 bg-yellow-100 border border-yellow-300 rounded text-sm font-mono">
+            <div class="mb-2 p-2 bg-yellow-100 border border-yellow-300 rounded text-base font-mono">
                 Debug Timer: <span x-text="Math.max(0, Math.ceil(debugCountdown / 100) / 10).toFixed(1)"></span>s
             </div>
             @endif
 
-            <h3 class="text-lg text-gray-700 mb-4 text-center">
+            <h3 class="text-xl text-gray-700 mb-4 text-center">
                 Jumlahkan titik kartu ini dengan kartu sebelumnya!
             </h3>
             <div class="flex justify-center items-center mb-4">
                 <!-- Single domino card -->
                 <div class="text-center">
-                    <div class="w-32 h-32 border-2 border-gray-300 rounded-lg mb-2 flex items-center justify-center">
+                    <div class="w-40 h-40 border-2 border-gray-300 rounded-lg mb-2 flex items-center justify-center">
                         <img src="/images/energy/{{ $currentImage }}.png" alt="Kartu domino"
                             class="max-w-full max-h-full object-contain">
                     </div>
                 </div>
             </div>
 
-            <p class="text-gray-600">Ketik jawaban (angka 0-9) pada keyboard</p>
-            <p class="text-sm text-gray-500 mt-1">*Jika jawaban 2 digit, ketik angka terakhir saja (contoh: jawaban 12,
+            <p class="text-lg text-gray-600">Ketik jawaban (angka 0-9) pada keyboard</p>
+            <p class="text-base text-gray-500 mt-1">*Jika jawaban 2 digit, ketik angka terakhir saja (contoh: jawaban 12,
                 ketik 2)</p>
         </div>
         @endif
