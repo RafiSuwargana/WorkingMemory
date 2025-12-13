@@ -240,7 +240,7 @@
         x-transition:enter-end="opacity-100" x-transition:leave="ease-in duration-200"
         x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0"
         class="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center p-4 z-50"
-        style="backdrop-filter: blur(2px);">
+        style="backdrop-filter: blur(2px);" x-cloak>
 
         <div class="bg-white rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
             <div class="p-8">

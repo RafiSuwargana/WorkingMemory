@@ -60,8 +60,8 @@
         }
     }
 }" x-on:keydown.window="handleKeydown($event)"
-    x-on:show-feedback.window="setTimeout(() => { $wire.proceedAfterFeedback(); }, 250)"
-    x-on:show-feedback-retry.window="setTimeout(() => { $wire.proceedAfterRetry(); }, 1500)" x-init="
+    x-on:show-feedback.window="setTimeout(() => { $wire.proceedAfterFeedback(); }, 200)"
+    x-on:show-feedback-retry.window="setTimeout(() => { $wire.proceedAfterRetry(); }, 200)" x-init="
     $wire.on('question-loaded', () => {
         // Clear any existing timer first
         clearTimer();
@@ -129,10 +129,10 @@
             <div class="mb-6 w-full flex flex-col items-center">
                 <div class="mb-6 text-center">
                     <h3 class="text-2xl font-bold text-gray-800 mb-4">
-                        Jawaban kamu: {{ $testSession->total_correct ?? 0 }}/{{ $totalQuestions }}
+                        Jawaban kamu: {{ $testSession->correct_answers ?? 0 }}/{{ $totalQuestions }}
                     </h3>
                     <p class="text-xl text-gray-700 mb-2">
-                        Tingkat Akurasi: {{ $testSession->accuracy ?? 0 }}%
+                        Tingkat Akurasi: {{ $accuracy ?? 0 }}%
                     </p>
                     <p class="text-xl text-gray-700 mb-4">
                         Total Waktu: {{ $testSession->total_time ? number_format($testSession->total_time / 1000, 1) :
@@ -184,8 +184,6 @@
                     Sudah Mengerti (Mulai Test)
                 </button>
             </div>
-
-            <p class="text-gray-500 mt-4 text-sm">Klik pilihan di atas atau tekan angka 1 untuk ulangi</p>
         </div>
 
         @elseif($isSimulation)
@@ -216,7 +214,8 @@
             <div class="flex justify-center items-center mb-4">
                 <!-- Single domino card -->
                 <div class="text-center">
-                    <div class="w-40 h-40 border-2 border-gray-300 rounded-lg mb-2 flex items-center justify-center">
+                    <div
+                        class="w-32 h-32 sm:w-40 sm:h-40 md:w-48 md:h-48 lg:w-56 lg:h-56 border-2 border-gray-300 rounded-lg mb-2 flex items-center justify-center">
                         <img src="/images/energy/{{ $currentImage }}.png" alt="Kartu domino"
                             class="max-w-full max-h-full object-contain">
                     </div>
@@ -227,7 +226,8 @@
             <p class="text-lg text-gray-600">Klik spasi!</p>
             @else
             <p class="text-lg text-gray-600">Ketik jawaban (angka 0-9) pada keyboard</p>
-            <p class="text-base text-gray-500 mt-1">*Jika jawaban 2 digit, ketik angka terakhir saja (contoh: jawaban 12,
+            <p class="text-base text-gray-500 mt-1">*Jika jawaban 2 digit, ketik angka terakhir saja (contoh: jawaban
+                12,
                 ketik 2)</p>
             @endif
         </div>
@@ -259,7 +259,8 @@
             </div>
 
             <p class="text-lg text-gray-600">Ketik jawaban (angka 0-9) pada keyboard</p>
-            <p class="text-base text-gray-500 mt-1">*Jika jawaban 2 digit, ketik angka terakhir saja (contoh: jawaban 12,
+            <p class="text-base text-gray-500 mt-1">*Jika jawaban 2 digit, ketik angka terakhir saja (contoh: jawaban
+                12,
                 ketik 2)</p>
         </div>
         @endif

@@ -12,7 +12,7 @@ class TestSession extends Model
         'user_id',
         'test_type',
         'status',
-        'total_questions',
+        'total_questions',  
         'correct_answers',
         'wrong_answers',
         'total_time',

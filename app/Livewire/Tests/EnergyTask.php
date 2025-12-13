@@ -14,7 +14,7 @@ class EnergyTask extends Component
     protected $listeners = ['spacePressed' => 'handleSpacePress', 'numberPressed' => 'handleAnswer'];
 
     public $currentQuestion = 1;
-    public $totalQuestions = 49; // 49 soal tes sesungguhnya
+    public $totalQuestions = 0; // Akan diisi otomatis berdasarkan jumlah testData
     public $simulationQuestions = 4; // 4 simulasi untuk energy task
 
     public $isSimulation = true;
@@ -96,6 +96,9 @@ class EnergyTask extends Component
     {
         Log::info('=== ENERGY MOUNT START ===');
 
+        // Set total questions based on testData array length
+        $this->totalQuestions = count($this->testData);
+
         // Check for existing in-progress session
         $existingSession = TestSession::where('user_id', Auth::id())
             ->where('test_type', 'energy')
@@ -170,6 +173,7 @@ class EnergyTask extends Component
         $this->answered = false;
         $this->userAnswer = null;
         $this->inputDisabled = false;
+        $this->timeoutOccurred = false;
         $this->questionStartTime = microtime(true);
 
         Log::info('Energy question loaded - Image: ' . $this->currentImage . ', Previous Total: ' . $this->previousTotal);
@@ -203,41 +207,15 @@ class EnergyTask extends Component
 
     public function handleTimeout()
     {
-        if ($this->inputDisabled || $this->answered || $this->isSimulation || $this->isTransition || $this->isCompleted) {
+        if ($this->answered || $this->isSimulation || $this->isTransition || $this->isCompleted || $this->timeoutOccurred) {
             return;
         }
 
-        $this->inputDisabled = true;
-        $this->answered = true;
+        // Set flag bahwa timeout terjadi, tapi jangan disable input
+        // Biarkan user tetap bisa menjawab
         $this->timeoutOccurred = true;
-        $this->feedbackType = 'slow';
 
-        // Save slow response result
-        $questionIndex = $this->currentQuestion - 1;
-        $correctAnswer = isset($this->testData[$questionIndex]) ? $this->testData[$questionIndex]['correct_response'] : 0;
-
-        TestResult::create([
-            'test_session_id' => $this->testSession->id,
-            'question_number' => $this->currentQuestion,
-            'question_data' => [
-                'image' => $this->currentImage,
-                'previous_total' => $this->previousTotal,
-                'is_simulation' => false,
-            ],
-            'correct_answer' => $correctAnswer,
-            'user_answer' => null,
-            'is_correct' => false,
-            'response_time' => 15000, // 15 seconds
-            'timeout' => true,
-            'question_started_at' => now()->subMilliseconds(15000),
-            'answered_at' => now(),
-        ]);
-
-        // Update session total time
-        $this->updateSessionTotalTime();
-
-        $this->showFeedback = true;
-        $this->dispatch('show-feedback');
+        Log::info('Timeout occurred on question ' . $this->currentQuestion . ', waiting for user answer');
     }
 
     public function handleAnswer($answer)
@@ -262,7 +240,6 @@ class EnergyTask extends Component
 
         $this->answered = true;
         $this->userAnswer = $answer;
-        $this->timeoutOccurred = false;
 
         // Calculate response time
         $responseTime = ($this->questionStartTime) ?
@@ -281,10 +258,16 @@ class EnergyTask extends Component
 
             $isCorrect = ($answer == $expectedInput);
 
-            if ($isCorrect) {
-                $this->feedbackType = 'correct';
+            // Check if timeout occurred - if yes, always mark as slow and incorrect
+            if ($this->timeoutOccurred) {
+                $this->feedbackType = 'slow';
+                $isCorrect = false; // Always incorrect if timeout
             } else {
-                $this->feedbackType = 'wrong';
+                if ($isCorrect) {
+                    $this->feedbackType = 'correct';
+                } else {
+                    $this->feedbackType = 'wrong';
+                }
             }
 
             // Save to database
@@ -300,7 +283,7 @@ class EnergyTask extends Component
                 'user_answer' => $answer,
                 'is_correct' => $isCorrect,
                 'response_time' => $responseTime,
-                'timeout' => false,
+                'timeout' => $this->timeoutOccurred,
                 'question_started_at' => now()->subMilliseconds($responseTime),
                 'answered_at' => now(),
             ]);
@@ -448,10 +431,10 @@ class EnergyTask extends Component
         $this->testSession->update([
             'status' => 'completed',
             'completed_at' => now(),
-            'total_correct' => $correctAnswers,
+            'correct_answers' => $correctAnswers,
             'wrong_answers' => $wrongAnswers,
             'accuracy' => $this->accuracy,
-            'avg_response_time' => $avgResponseTime ? round($avgResponseTime, 2) : null
+            'average_response_time' => $avgResponseTime ? round($avgResponseTime, 2) : null
         ]);
 
         Log::info('Energy test completed - Total: ' . $correctAnswers . '/' . $totalRealQuestions . ', Accuracy: ' . $this->accuracy . '%, Avg Response: ' . ($avgResponseTime ? round($avgResponseTime, 2) : 'N/A') . 'ms');
