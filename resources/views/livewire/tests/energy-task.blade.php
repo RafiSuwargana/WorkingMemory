@@ -106,19 +106,19 @@
         <!-- Feedback Display -->
         <div class="w-full flex flex-col items-center justify-center text-center mb-4">
             @if($feedbackType === 'correct')
-            <div class="mb-6 text-center">
-                <div class="text-6xl mb-4">✓</div>
-                <h3 class="text-3xl font-bold text-green-600 mb-4">Benar!</h3>
+            <div class="text-center">
+                <div class="text-9xl mb-8">✓</div>
+                <h3 class="text-6xl font-bold text-green-600">Benar!</h3>
             </div>
             @elseif($feedbackType === 'wrong')
-            <div class="mb-6 text-center">
-                <div class="text-6xl mb-4">✗</div>
-                <h3 class="text-3xl font-bold text-red-600 mb-4">Salah!</h3>
+            <div class="text-center">
+                <div class="text-9xl mb-8">✗</div>
+                <h3 class="text-6xl font-bold text-red-600">Salah!</h3>
             </div>
             @elseif($feedbackType === 'slow')
-            <div class="mb-6 text-center">
-                <div class="text-6xl mb-4">⏰</div>
-                <h3 class="text-3xl font-bold text-orange-600 mb-4">Kamu terlalu lama mengerjakan soal ini!</h3>
+            <div class="text-center">
+                <div class="text-9xl mb-8">⏰</div>
+                <h3 class="text-6xl font-bold text-orange-600">Kamu terlalu lama mengerjakan soal ini!</h3>
             </div>
             @endif
         </div>

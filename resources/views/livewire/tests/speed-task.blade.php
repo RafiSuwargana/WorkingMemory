@@ -225,8 +225,6 @@
                     Sudah Mengerti (Mulai Test)
                 </button>
             </div>
-
-            <p class="text-gray-500 mt-4 text-sm">Klik pilihan di atas atau tekan angka 1/2 pada keyboard</p>
         </div>
 
         @elseif($isSimulation)

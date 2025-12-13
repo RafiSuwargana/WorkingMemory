@@ -181,14 +181,14 @@
 
             <!-- Capacity Task -->
             <div
-                class="bg-white overflow-hidden shadow rounded-lg {{ $capacityTest ? 'ring-2 ring-green-200 bg-green-50' : '' }}">
+                class="bg-white overflow-hidden shadow rounded-lg {{ $capacityTest ? 'ring-2 ring-blue-200 bg-blue-50' : '' }}">
                 <div class="p-5">
                     <div class="flex items-center">
                         <div class="flex-shrink-0">
                             <div
-                                class="h-8 w-8 {{ $capacityTest ? 'bg-green-100' : 'bg-blue-100' }} rounded-full flex items-center justify-center">
+                                class="h-8 w-8 {{ $capacityTest ? 'bg-blue-100' : 'bg-blue-100' }} rounded-full flex items-center justify-center">
                                 @if($capacityTest)
-                                <svg class="h-5 w-5 text-green-600" fill="none" stroke="currentColor"
+                                <svg class="h-5 w-5 text-blue-600" fill="none" stroke="currentColor"
                                     viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                         d="M5 13l4 4L19 7" />

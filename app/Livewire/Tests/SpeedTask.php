@@ -357,14 +357,10 @@ class SpeedTask extends Component
         // Disable input immediately
         $this->inputDisabled = true;
 
-        // Handle transisi - keyboard input untuk restart simulasi saja
+        // Handle transisi - hanya tombol yang handle, tidak ada keyboard input
         if ($this->isTransition) {
-            if ($position == 1) {
-                // Restart simulation
-                $this->restartSimulation();
-                return;
-            }
-            // Keyboard input 2 tidak melakukan apa-apa, karena tombol yang handle proceed
+            // Keyboard input tidak melakukan apa-apa di transisi
+            $this->inputDisabled = false;
             return;
         }
 
