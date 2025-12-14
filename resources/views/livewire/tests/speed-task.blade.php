@@ -5,22 +5,26 @@
     debugInterval: null,
 
     startTimer() {
+        // Prevent multiple timers from starting
         if (this.timeoutTimer) {
-            clearTimeout(this.timeoutTimer);
+            return;
         }
-        if (this.debugInterval) {
-            clearInterval(this.debugInterval);
-        }
+        
+        // Clear any existing timers (safety check)
+        this.clearTimer();
 
         this.questionStartTime = Date.now();
         this.debugCountdown = 1200;
 
         // Start debug countdown if in local environment
-        if (@json($debugTimer)) {
+        const isDebugMode = @json($debugTimer);
+        
+        if (isDebugMode) {
             this.debugInterval = setInterval(() => {
-                this.debugCountdown -= 100;
+                this.debugCountdown = Math.max(0, this.debugCountdown - 100);
                 if (this.debugCountdown <= 0) {
                     clearInterval(this.debugInterval);
+                    this.debugInterval = null;
                 }
             }, 100);
         }
@@ -66,30 +70,17 @@
 }" x-on:keydown.window="handleKeydown($event)"
     x-on:show-feedback.window="setTimeout(() => { $wire.proceedAfterFeedback(); }, 250)"
     x-on:show-feedback-retry.window="setTimeout(() => { $wire.proceedAfterRetry(); }, 1500)" x-init="
-    $wire.on('question-loaded', () => {
-        // Clear any existing timer first
-        clearTimer();
-        // Only start timer for real test questions, with proper delay after feedback
-        if (!@json($isSimulation) && !@json($isTransition) && !@json($isCompleted) && !@json($showFeedback)) {
+        // Auto start timer for real test questions
+        $wire.on('question-loaded', () => {
             setTimeout(() => {
-                // Double check conditions before starting timer
-                if (!@json($showFeedback) && !@json($inputDisabled)) {
-                    startTimer();
+                if (!@json($isSimulation) && !@json($isTransition) && !@json($isCompleted) && !@json($showFeedback) && !@json($inputDisabled)) {
+                    if (!this.timeoutTimer) {
+                        startTimer();
+                    }
                 }
-            }, 300); // Increased delay to avoid conflict with feedback
-        }
-    });
-
-    $wire.on('$refresh', () => {
-        // Clear any existing timers on component refresh
-        clearTimer();
-        // Re-check if we need to start timer after refresh with longer delay
-        setTimeout(() => {
-            if (!@json($isSimulation) && !@json($isTransition) && !@json($isCompleted) && !@json($showFeedback)) {
-                startTimer();
-            }
-        }, 400);
-    });
+            }, 50);
+        });
+    "
 ">
     <style>
         .speed-container {
@@ -102,9 +93,44 @@
             width: 100%;
             margin: 0 auto;
         }
+        
+        /* Optimasi untuk memastikan gambar loading dengan cepat */
+        .speed-container img {
+            image-rendering: -webkit-optimize-contrast;
+            image-rendering: crisp-edges;
+            will-change: contents;
+            backface-visibility: hidden;
+            -webkit-backface-visibility: hidden;
+            transform: translateZ(0);
+            -webkit-transform: translateZ(0);
+            /* Force hardware acceleration */
+            transform: translate3d(0, 0, 0);
+            -webkit-transform: translate3d(0, 0, 0);
+        }
+        
+        /* Critical CSS untuk gambar container */
+        .speed-container .w-32.h-32 {
+            contain: layout style paint;
+            will-change: contents;
+        }
+        
+        /* Preload indicator styles */
+        .preload-overlay {
+            backdrop-filter: blur(2px);
+            -webkit-backdrop-filter: blur(2px);
+        }
+        
+        /* Force image caching */
+        .speed-container img[src*="/images/speed/"] {
+            /* Prefetch hint for better caching */
+            image-rendering: auto;
+            object-fit: contain;
+        }
     </style>
 
     <div class="speed-container">
+
+
 
         @if($showFeedback)
         <!-- Feedback Display -->
@@ -170,6 +196,9 @@
                     </p>
                     <p class="text-xl text-gray-700 mb-4">
                         Total Waktu: {{ number_format($testSession->total_time / 1000, 1) }} detik
+                    </p>
+                    <p class="text-xl text-gray-700 mb-4">
+                        Rata-rata Waktu Respon: {{ number_format(($testSession->average_response_time ?? 0) / 1000, 2) }} detik
                     </p>
                 </div>
 
@@ -284,8 +313,21 @@
             </h2>
 
             @if($debugTimer)
-            <div class="mb-2 p-2 bg-yellow-100 border border-yellow-300 rounded text-base font-mono">
-                Debug Timer: <span x-text="Math.max(0, Math.ceil(debugCountdown / 100) / 10).toFixed(1)"></span>s
+            <div class="mb-2 p-2 bg-yellow-100 border border-yellow-300 rounded text-base font-mono" x-init="
+                // Auto-start timer for real test phase after delay (only if no timer exists)
+                setTimeout(() => {
+                    checkAndStartTimer();
+                }, 500);
+            ">
+                Debug Timer: <span x-text="(debugCountdown / 1000).toFixed(1)"></span>s 
+                <span x-show="debugCountdown <= 0" class="text-red-600 font-bold">TIMEOUT!</span>
+                <div class="text-xs text-gray-600 mt-1">
+                    Timer state: <span x-text="timeoutTimer ? 'Running' : 'Stopped'"></span> |
+                    Debug interval: <span x-text="debugInterval ? 'Active' : 'Inactive'"></span>
+                </div>
+                <button @click="startTimer()" class="mt-1 px-2 py-1 bg-blue-500 text-white text-xs rounded">
+                    Manual Start Timer
+                </button>
             </div>
             @endif
 
@@ -293,7 +335,12 @@
                 Klik angka 1 atau angka 2 pada keyboard!
             </h3>
 
-            <div class="flex justify-center items-center gap-8 mb-4">
+            <div class="flex justify-center items-center gap-8 mb-4" x-init="
+                // Final fallback: Auto-start timer when real test images are rendered
+                setTimeout(() => {
+                    checkAndStartTimer();
+                }, 800);
+            ">
                 <!-- Image 1 -->
                 <div class="text-center">
                     <div class="w-32 h-32 border-2 border-gray-300 rounded-lg mb-2 flex items-center justify-center">
@@ -318,4 +365,12 @@
         @endif
 
     </div>
+    
+    <!-- Hidden images for preloading - ensures all images are cached -->
+    <div style="position: absolute; left: -9999px; top: -9999px; visibility: hidden; pointer-events: none;">
+        @for($i = 1; $i <= 15; $i++)
+        <img src="/images/speed/{{ $i }}.png" alt="" style="width: 1px; height: 1px;">
+        @endfor
+    </div>
 </div>
+

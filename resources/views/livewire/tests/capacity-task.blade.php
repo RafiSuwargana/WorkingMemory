@@ -25,7 +25,6 @@
     },
 
     startTestTimer() {
-        console.log('startTestTimer called, debugTimer:', @json($debugTimer));
         if (this.timeoutTimer) {
             clearTimeout(this.timeoutTimer);
         }
@@ -39,11 +38,9 @@
 
         // Start debug countdown if in local environment
         const isDebug = @json($debugTimer);
-        console.log('Setting up debug interval, isDebug:', isDebug);
         if (isDebug) {
             this.debugInterval = setInterval(() => {
                 this.debugCountdown -= 100;
-                console.log('Debug countdown:', this.debugCountdown);
                 if (this.debugCountdown <= 0) {
                     this.debugCountdown = 0;
                     clearInterval(this.debugInterval);
@@ -52,13 +49,11 @@
         }
 
         this.timeoutTimer = setTimeout(() => {
-            console.log('Timeout triggered!');
             $wire.handleTimeout();
         }, 15000); // 15 seconds
     },
 
     clearTestTimer() {
-        console.log('Clearing test timer');
         if (this.timeoutTimer) {
             clearTimeout(this.timeoutTimer);
             this.timeoutTimer = null;
@@ -68,12 +63,32 @@
             this.debugInterval = null;
         }
     }
-}" x-on:startTestTimer.window="console.log('startTestTimer.window event received'); startTestTimer()"
+}" x-on:startTestTimer.window="startTestTimer()"
     x-on:show-capacity-feedback.window="clearTestTimer(); setTimeout(() => { $wire.hideFeedbackAndProceed(); }, 200)">
     <div class="w-full max-w-6xl mx-auto p-4">
 
 
-        @if($isCompleted)
+        @if($isPreloading)
+        <!-- Preloading Screen -->
+        <div class="min-h-screen flex flex-col items-center justify-center text-center">
+            <div class="mb-8">
+                <h2 class="text-3xl font-bold text-blue-600 mb-4">Memuat Gambar Tes...</h2>
+                <p class="text-lg text-gray-600 mb-6">Mohon tunggu sementara kami menyiapkan gambar untuk tes Anda.</p>
+                
+                <!-- Progress Bar -->
+                <div class="w-80 bg-gray-200 rounded-full h-4 mx-auto mb-4">
+                    <div class="bg-blue-600 h-4 rounded-full transition-all duration-300" 
+                         style="width: {{ $preloadProgress }}%"></div>
+                </div>
+                
+                <!-- Progress Text -->
+                <p class="text-sm text-gray-500">{{ $preloadProgress }}% selesai</p>
+            </div>
+            
+            <!-- Loading Animation -->
+            <div class="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-600"></div>
+        </div>
+        @elseif($isCompleted)
         <!-- Completion Screen -->
         <div class="w-full flex flex-col items-center justify-center text-center mb-4">
             <div class="mb-6 w-full flex flex-col items-center">
@@ -88,17 +103,15 @@
                         Total Waktu: {{ $testSession->total_time ? number_format($testSession->total_time / 1000, 1) :
                         '0' }} detik
                     </p>
-                    @if($testSession->average_response_time)
                     <p class="text-xl text-gray-700 mb-4">
-                        Rata-rata Waktu Respon: {{ number_format($testSession->average_response_time / 1000, 2) }} detik
+                        Rata-rata Waktu Respon: {{ number_format(($testSession->average_response_time ?? 0) / 1000, 2) }} detik
                     </p>
-                    @endif
                 </div>
                 <div class="text-center">
                     <p class="text-xl text-gray-700 mb-4">
                         Terimakasih telah berpartisipasi!
                     </p>
-                    <p class="text-lg text-gray-600">Klik Spasi untuk menuju tes berikutnya!</p>
+                    <p class="text-lg text-gray-600">Klik Spasi untuk kembali ke dashboard!</p>
                 </div>
             </div>
         </div>
@@ -146,7 +159,6 @@
         @elseif($isTesting)
         <!-- Testing Phase -->
         <div class="bg-white rounded-lg shadow-md p-8" x-init="
-            console.log('Testing phase mounted, starting timer...');
             startTestTimer();
         ">
             <div class="text-center mb-6">
@@ -214,9 +226,19 @@
     </div>
 </div>
 
+<!-- Include preloader script -->
+<script src="{{ asset('js/capacity-preloader.js') }}"></script>
+
 <script>
     document.addEventListener('DOMContentLoaded', function() {
     let memorizeTimer;
+    let preloadStarted = false;
+
+    // Start preloading if not already started and we're in preloading state
+    if (@json($isPreloading) && !preloadStarted) {
+        preloadStarted = true;
+        startPreloading();
+    }
 
     // Space key handler
     document.addEventListener('keydown', function(event) {
@@ -239,5 +261,27 @@
             clearInterval(memorizeTimer);
         }
     });
+
+    // Preloading function
+    function startPreloading() {
+        if (window.capacityPreloader) {
+            window.capacityPreloader
+                .onProgress((loaded, total, percentage) => {
+                    @this.call('updatePreloadProgress', percentage);
+                })
+                .onComplete(() => {
+                    @this.call('handlePreloadComplete');
+                })
+                .preloadAll()
+                .catch(error => {
+                    console.error('Capacity preloading failed:', error);
+                    // Continue anyway if preloading fails
+                    @this.call('handlePreloadComplete');
+                });
+        } else {
+            console.error('Capacity preloader not found, skipping preload');
+            @this.call('handlePreloadComplete');
+        }
+    }
 });
 </script>

@@ -102,7 +102,27 @@
 
     <div class="energy-container">
 
-        @if($showFeedback)
+        @if($isPreloading)
+        <!-- Preloading Screen -->
+        <div class="min-h-screen flex flex-col items-center justify-center text-center">
+            <div class="mb-8">
+                <h2 class="text-3xl font-bold text-blue-600 mb-4">Memuat Gambar Tes...</h2>
+                <p class="text-lg text-gray-600 mb-6">Mohon tunggu sementara kami menyiapkan gambar untuk tes Anda.</p>
+                
+                <!-- Progress Bar -->
+                <div class="w-80 bg-gray-200 rounded-full h-4 mx-auto mb-4">
+                    <div class="bg-blue-600 h-4 rounded-full transition-all duration-300" 
+                         style="width: {{ $preloadProgress }}%"></div>
+                </div>
+                
+                <!-- Progress Text -->
+                <p class="text-sm text-gray-500">{{ $preloadProgress }}% selesai</p>
+            </div>
+            
+            <!-- Loading Animation -->
+            <div class="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-600"></div>
+        </div>
+        @elseif($showFeedback)
         <!-- Feedback Display -->
         <div class="w-full flex flex-col items-center justify-center text-center mb-4">
             @if($feedbackType === 'correct')
@@ -138,11 +158,9 @@
                         Total Waktu: {{ $testSession->total_time ? number_format($testSession->total_time / 1000, 1) :
                         '0' }} detik
                     </p>
-                    @if($testSession->avg_response_time)
                     <p class="text-xl text-gray-700 mb-4">
-                        Rata-rata Waktu Respon: {{ number_format($testSession->avg_response_time / 1000, 2) }} detik
+                        Rata-rata Waktu Respon: {{ number_format(($testSession->average_response_time ?? 0) / 1000, 2) }} detik
                     </p>
-                    @endif
                 </div>
                 <div class="text-center">
                     <p class="text-xl text-gray-700 mb-4">
@@ -267,3 +285,40 @@
 
     </div>
 </div>
+
+<!-- Include preloader script -->
+<script src="{{ asset('js/energy-preloader.js') }}"></script>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        let preloadStarted = false;
+        
+        // Start preloading if not already started and we're in preloading state
+        if (@json($isPreloading) && !preloadStarted) {
+            preloadStarted = true;
+            startEnergyPreloading();
+        }
+        
+        // Preloading function
+        function startEnergyPreloading() {
+            if (window.energyPreloader) {
+                window.energyPreloader
+                    .onProgress((loaded, total, percentage) => {
+                        @this.call('updatePreloadProgress', percentage);
+                    })
+                    .onComplete(() => {
+                        @this.call('handlePreloadComplete');
+                    })
+                    .preloadAll()
+                    .catch(error => {
+                        console.error('Energy preloading failed:', error);
+                        // Continue anyway if preloading fails
+                        @this.call('handlePreloadComplete');
+                    });
+            } else {
+                console.error('Energy preloader not found, skipping preload');
+                @this.call('handlePreloadComplete');
+            }
+        }
+    });
+</script>

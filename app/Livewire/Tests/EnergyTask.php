@@ -11,7 +11,12 @@ use Illuminate\Support\Facades\Log;
 
 class EnergyTask extends Component
 {
-    protected $listeners = ['spacePressed' => 'handleSpacePress', 'numberPressed' => 'handleAnswer'];
+    protected $listeners = [
+        'spacePressed' => 'handleSpacePress', 
+        'numberPressed' => 'handleAnswer',
+        'preloadComplete' => 'handlePreloadComplete',
+        'preloadProgress' => 'updatePreloadProgress'
+    ];
 
     public $currentQuestion = 1;
     public $totalQuestions = 0; // Akan diisi otomatis berdasarkan jumlah testData
@@ -20,6 +25,8 @@ class EnergyTask extends Component
     public $isSimulation = true;
     public $isCompleted = false;
     public $isTransition = false;
+    public $isPreloading = true; // Fase preload gambar
+    public $preloadProgress = 0; // Progress preload (0-100%)
 
     public $currentImage = null; // Energy task hanya 1 gambar per tampilan
     public $previousTotal = 0; // Menyimpan total sebelumnya untuk penjumlahan
@@ -392,7 +399,7 @@ class EnergyTask extends Component
             'correct_answers' => $correctAnswers,
             'wrong_answers' => $wrongAnswers,
             'accuracy' => $this->accuracy,
-            'average_response_time' => $avgResponseTime ? round($avgResponseTime, 2) : null
+            'average_response_time' => $avgResponseTime ? round($avgResponseTime, 2) : 0
         ]);
 
         Log::info('Energy test completed - Total: ' . $correctAnswers . '/' . $totalRealQuestions . ', Accuracy: ' . $this->accuracy . '%, Avg Response: ' . ($avgResponseTime ? round($avgResponseTime, 2) : 'N/A') . 'ms');
@@ -430,6 +437,19 @@ class EnergyTask extends Component
         $this->loadQuestion();
         // Force refresh the component state
         $this->dispatch('$refresh');
+    }
+
+    public function handlePreloadComplete()
+    {
+        Log::info('Energy images preload completed');
+        $this->isPreloading = false;
+        $this->preloadProgress = 100;
+    }
+
+    public function updatePreloadProgress($progress)
+    {
+        $this->preloadProgress = $progress;
+        Log::info('Energy preload progress: ' . $progress . '%');
     }
 
     public function render()

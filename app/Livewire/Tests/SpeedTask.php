@@ -550,6 +550,7 @@ class SpeedTask extends Component
         // Calculate final statistics
         $avgResponseTime = TestResult::where('test_session_id', $this->testSession->id)
             ->whereJsonContains('question_data->is_simulation', false)
+            ->where('timeout', false)
             ->avg('response_time');
 
         // Update session total time
@@ -562,11 +563,13 @@ class SpeedTask extends Component
             'total_questions' => $this->totalQuestions,
             'correct_answers' => $this->totalCorrect,
             'wrong_answers' => $this->totalQuestions - $this->totalCorrect,
-            'average_response_time' => $avgResponseTime ?: 0,
+            'average_response_time' => $avgResponseTime ? round($avgResponseTime, 2) : 0,
         ]);
 
         Log::info('Test completed - Score: ' . $this->totalCorrect . '/' . $this->totalQuestions . ' (' . $this->accuracy . '%)');
     }
+
+
 
     public function render()
     {

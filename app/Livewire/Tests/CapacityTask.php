@@ -13,7 +13,12 @@ use Illuminate\Support\Facades\Log;
 #[Layout('components.layouts.app')]
 class CapacityTask extends Component
 {
-    protected $listeners = ['spacePressed' => 'handleSpacePress', 'imageClicked' => 'handleImageClick'];
+    protected $listeners = [
+        'spacePressed' => 'handleSpacePress', 
+        'imageClicked' => 'handleImageClick',
+        'preloadComplete' => 'handlePreloadComplete',
+        'preloadProgress' => 'updatePreloadProgress'
+    ];
 
     public $currentTrial = 1;
     public $totalTrials = 0; // Akan diisi otomatis berdasarkan jumlah testData
@@ -22,6 +27,8 @@ class CapacityTask extends Component
     public $isTesting = false; // Fase tes dengan 8 gambar
     public $isCompleted = false;
     public $isTransition = false;
+    public $isPreloading = true; // Fase preload gambar
+    public $preloadProgress = 0; // Progress preload (0-100%)
 
     public $memoryImages = []; // 2 gambar yang harus diingat
     public $testImages = []; // 8 gambar untuk dipilih (termasuk 2 yang diingat)
@@ -188,6 +195,8 @@ class CapacityTask extends Component
     {
         if ($this->isMemorizing) {
             $this->proceedToTest();
+        } elseif ($this->isCompleted) {
+            return redirect()->route('dashboard');
         }
     }
 
@@ -352,7 +361,7 @@ class CapacityTask extends Component
             'correct_answers' => $correctAnswers,
             'wrong_answers' => $wrongAnswers,
             'accuracy' => $this->accuracy,
-            'average_response_time' => $avgResponseTime ? round($avgResponseTime, 2) : null
+            'average_response_time' => $avgResponseTime ? round($avgResponseTime, 2) : 0
         ]);
 
         Log::info('Capacity test completed - Total: ' . $correctAnswers . '/' . $totalRealQuestions . ', Accuracy: ' . $this->accuracy . '%, Avg Response: ' . ($avgResponseTime ? round($avgResponseTime, 2) : 'N/A') . 'ms');
@@ -378,6 +387,19 @@ class CapacityTask extends Component
     {
         $this->showFeedback = false;
         $this->nextTrial();
+    }
+
+    public function handlePreloadComplete()
+    {
+        Log::info('Capacity images preload completed');
+        $this->isPreloading = false;
+        $this->preloadProgress = 100;
+    }
+
+    public function updatePreloadProgress($progress)
+    {
+        $this->preloadProgress = $progress;
+        Log::info('Capacity preload progress: ' . $progress . '%');
     }
 
     public static function getNextTestType($userId)
