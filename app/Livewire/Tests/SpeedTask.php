@@ -16,7 +16,7 @@ class SpeedTask extends Component
     protected $listeners = ['spacePressed' => 'handleSpacePress', 'numberPressed' => 'handleAnswer'];
 
     public $currentQuestion = 1;
-    public $totalQuestions = 50;
+    public $totalQuestions;
     public $simulationQuestions = 3;
 
     public $isSimulation = true;
@@ -48,51 +48,51 @@ class SpeedTask extends Component
         ['shape_target' => 1, 'shape_distractor' => 10, 'correct_response' => 2],
         ['shape_target' => 10, 'shape_distractor' => 3, 'correct_response' => 1],
         ['shape_target' => 3, 'shape_distractor' => 14, 'correct_response' => 1],
-        ['shape_target' => 14, 'shape_distractor' => 1, 'correct_response' => 2],
-        ['shape_target' => 1, 'shape_distractor' => 14, 'correct_response' => 1],
-        ['shape_target' => 14, 'shape_distractor' => 4, 'correct_response' => 2],
-        ['shape_target' => 4, 'shape_distractor' => 13, 'correct_response' => 1],
-        ['shape_target' => 13, 'shape_distractor' => 1, 'correct_response' => 2],
-        ['shape_target' => 1, 'shape_distractor' => 10, 'correct_response' => 1],
-        ['shape_target' => 10, 'shape_distractor' => 5, 'correct_response' => 2],
-        ['shape_target' => 5, 'shape_distractor' => 9, 'correct_response' => 1],
-        ['shape_target' => 9, 'shape_distractor' => 5, 'correct_response' => 2],
-        ['shape_target' => 5, 'shape_distractor' => 14, 'correct_response' => 2],
-        ['shape_target' => 14, 'shape_distractor' => 3, 'correct_response' => 2],
-        ['shape_target' => 3, 'shape_distractor' => 13, 'correct_response' => 1],
-        ['shape_target' => 13, 'shape_distractor' => 6, 'correct_response' => 1],
-        ['shape_target' => 6, 'shape_distractor' => 14, 'correct_response' => 2],
-        ['shape_target' => 14, 'shape_distractor' => 4, 'correct_response' => 1],
-        ['shape_target' => 4, 'shape_distractor' => 14, 'correct_response' => 1],
-        ['shape_target' => 14, 'shape_distractor' => 1, 'correct_response' => 1],
-        ['shape_target' => 1, 'shape_distractor' => 15, 'correct_response' => 2],
-        ['shape_target' => 15, 'shape_distractor' => 3, 'correct_response' => 2],
-        ['shape_target' => 3, 'shape_distractor' => 12, 'correct_response' => 1],
-        ['shape_target' => 12, 'shape_distractor' => 7, 'correct_response' => 2],
-        ['shape_target' => 7, 'shape_distractor' => 9, 'correct_response' => 1],
-        ['shape_target' => 9, 'shape_distractor' => 3, 'correct_response' => 1],
-        ['shape_target' => 3, 'shape_distractor' => 11, 'correct_response' => 2],
-        ['shape_target' => 11, 'shape_distractor' => 3, 'correct_response' => 2],
-        ['shape_target' => 3, 'shape_distractor' => 8, 'correct_response' => 2],
-        ['shape_target' => 8, 'shape_distractor' => 7, 'correct_response' => 1],
-        ['shape_target' => 7, 'shape_distractor' => 8, 'correct_response' => 1],
-        ['shape_target' => 8, 'shape_distractor' => 2, 'correct_response' => 1],
-        ['shape_target' => 2, 'shape_distractor' => 12, 'correct_response' => 2],
-        ['shape_target' => 12, 'shape_distractor' => 1, 'correct_response' => 2],
-        ['shape_target' => 1, 'shape_distractor' => 15, 'correct_response' => 2],
-        ['shape_target' => 15, 'shape_distractor' => 2, 'correct_response' => 2],
-        ['shape_target' => 2, 'shape_distractor' => 8, 'correct_response' => 1],
-        ['shape_target' => 8, 'shape_distractor' => 6, 'correct_response' => 1],
-        ['shape_target' => 6, 'shape_distractor' => 8, 'correct_response' => 2],
-        ['shape_target' => 8, 'shape_distractor' => 2, 'correct_response' => 1],
-        ['shape_target' => 2, 'shape_distractor' => 11, 'correct_response' => 2],
-        ['shape_target' => 11, 'shape_distractor' => 2, 'correct_response' => 2],
-        ['shape_target' => 2, 'shape_distractor' => 9, 'correct_response' => 1],
-        ['shape_target' => 9, 'shape_distractor' => 11, 'correct_response' => 1],
-        ['shape_target' => 1, 'shape_distractor' => 3, 'correct_response' => 1],
-        ['shape_target' => 8, 'shape_distractor' => 10, 'correct_response' => 2],
-        ['shape_target' => 4, 'shape_distractor' => 6, 'correct_response' => 1],
-        ['shape_target' => 6, 'shape_distractor' => 9, 'correct_response' => 2],
+        // ['shape_target' => 14, 'shape_distractor' => 1, 'correct_response' => 2],
+        // ['shape_target' => 1, 'shape_distractor' => 14, 'correct_response' => 1],
+        // ['shape_target' => 14, 'shape_distractor' => 4, 'correct_response' => 2],
+        // ['shape_target' => 4, 'shape_distractor' => 13, 'correct_response' => 1],
+        // ['shape_target' => 13, 'shape_distractor' => 1, 'correct_response' => 2],
+        // ['shape_target' => 1, 'shape_distractor' => 10, 'correct_response' => 1],
+        // ['shape_target' => 10, 'shape_distractor' => 5, 'correct_response' => 2],
+        // ['shape_target' => 5, 'shape_distractor' => 9, 'correct_response' => 1],
+        // ['shape_target' => 9, 'shape_distractor' => 5, 'correct_response' => 2],
+        // ['shape_target' => 5, 'shape_distractor' => 14, 'correct_response' => 2],
+        // ['shape_target' => 14, 'shape_distractor' => 3, 'correct_response' => 2],
+        // ['shape_target' => 3, 'shape_distractor' => 13, 'correct_response' => 1],
+        // ['shape_target' => 13, 'shape_distractor' => 6, 'correct_response' => 1],
+        // ['shape_target' => 6, 'shape_distractor' => 14, 'correct_response' => 2],
+        // ['shape_target' => 14, 'shape_distractor' => 4, 'correct_response' => 1],
+        // ['shape_target' => 4, 'shape_distractor' => 14, 'correct_response' => 1],
+        // ['shape_target' => 14, 'shape_distractor' => 1, 'correct_response' => 1],
+        // ['shape_target' => 1, 'shape_distractor' => 15, 'correct_response' => 2],
+        // ['shape_target' => 15, 'shape_distractor' => 3, 'correct_response' => 2],
+        // ['shape_target' => 3, 'shape_distractor' => 12, 'correct_response' => 1],
+        // ['shape_target' => 12, 'shape_distractor' => 7, 'correct_response' => 2],
+        // ['shape_target' => 7, 'shape_distractor' => 9, 'correct_response' => 1],
+        // ['shape_target' => 9, 'shape_distractor' => 3, 'correct_response' => 1],
+        // ['shape_target' => 3, 'shape_distractor' => 11, 'correct_response' => 2],
+        // ['shape_target' => 11, 'shape_distractor' => 3, 'correct_response' => 2],
+        // ['shape_target' => 3, 'shape_distractor' => 8, 'correct_response' => 2],
+        // ['shape_target' => 8, 'shape_distractor' => 7, 'correct_response' => 1],
+        // ['shape_target' => 7, 'shape_distractor' => 8, 'correct_response' => 1],
+        // ['shape_target' => 8, 'shape_distractor' => 2, 'correct_response' => 1],
+        // ['shape_target' => 2, 'shape_distractor' => 12, 'correct_response' => 2],
+        // ['shape_target' => 12, 'shape_distractor' => 1, 'correct_response' => 2],
+        // ['shape_target' => 1, 'shape_distractor' => 15, 'correct_response' => 2],
+        // ['shape_target' => 15, 'shape_distractor' => 2, 'correct_response' => 2],
+        // ['shape_target' => 2, 'shape_distractor' => 8, 'correct_response' => 1],
+        // ['shape_target' => 8, 'shape_distractor' => 6, 'correct_response' => 1],
+        // ['shape_target' => 6, 'shape_distractor' => 8, 'correct_response' => 2],
+        // ['shape_target' => 8, 'shape_distractor' => 2, 'correct_response' => 1],
+        // ['shape_target' => 2, 'shape_distractor' => 11, 'correct_response' => 2],
+        // ['shape_target' => 11, 'shape_distractor' => 2, 'correct_response' => 2],
+        // ['shape_target' => 2, 'shape_distractor' => 9, 'correct_response' => 1],
+        // ['shape_target' => 9, 'shape_distractor' => 11, 'correct_response' => 1],
+        // ['shape_target' => 1, 'shape_distractor' => 3, 'correct_response' => 1],
+        // ['shape_target' => 8, 'shape_distractor' => 10, 'correct_response' => 2],
+        // ['shape_target' => 4, 'shape_distractor' => 6, 'correct_response' => 1],
+        // ['shape_target' => 6, 'shape_distractor' => 9, 'correct_response' => 2],
     ];
 
     public static function getNextTestType($userId)
@@ -166,6 +166,9 @@ class SpeedTask extends Component
     public function mount()
     {
         Log::info('=== MOUNT START ===');
+
+        // Set total questions dynamically from test data
+        $this->totalQuestions = count($this->testData);
 
         // Check for existing in-progress session
         $existingSession = TestSession::where('user_id', Auth::id())
@@ -471,6 +474,9 @@ class SpeedTask extends Component
 
     public function proceedAfterFeedback()
     {
+        // Clear timer explicitly before proceeding
+        $this->dispatch('clear-timer');
+        
         $this->showFeedback = false;
         $this->feedbackType = null;
 
@@ -501,6 +507,9 @@ class SpeedTask extends Component
 
     public function proceedAfterRetry()
     {
+        // Clear timer explicitly before retry
+        $this->dispatch('clear-timer');
+        
         $this->showFeedback = false;
         $this->feedbackType = null;
         $this->answered = false;
@@ -528,6 +537,9 @@ class SpeedTask extends Component
 
     public function proceedToRealTest()
     {
+        // Clear any existing timers first
+        $this->dispatch('clear-timer');
+        
         // Proceed directly to real test from transition
         $this->isTransition = false;
         $this->isSimulation = false;

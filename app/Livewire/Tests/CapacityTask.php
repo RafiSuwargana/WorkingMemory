@@ -14,7 +14,7 @@ use Illuminate\Support\Facades\Log;
 class CapacityTask extends Component
 {
     protected $listeners = [
-        'spacePressed' => 'handleSpacePress', 
+        'spacePressed' => 'handleSpacePress',
         'imageClicked' => 'handleImageClick',
         'preloadComplete' => 'handlePreloadComplete',
         'preloadProgress' => 'updatePreloadProgress'
@@ -56,8 +56,8 @@ class CapacityTask extends Component
         ['correct_response' => '13', 'stimuli' => [13, 6], 'alternatives' => [13, 1, 6, 3, 5, 9, 2, 4]],
         ['correct_response' => '23', 'stimuli' => [7, 24], 'alternatives' => [2, 7, 24, 17, 3, 4, 5, 16]],
         ['correct_response' => '47', 'stimuli' => [5, 1], 'alternatives' => [9, 10, 7, 5, 15, 6, 1, 3]],
-        // ['correct_response' => '15', 'stimuli' => [2, 18], 'alternatives' => [2, 8, 6, 4, 18, 11, 7, 22]],
-        // ['correct_response' => '67', 'stimuli' => [14, 15], 'alternatives' => [5, 7, 4, 8, 9, 14, 15, 1]],
+        ['correct_response' => '15', 'stimuli' => [2, 18], 'alternatives' => [2, 8, 6, 4, 18, 11, 7, 22]],
+        ['correct_response' => '67', 'stimuli' => [14, 15], 'alternatives' => [5, 7, 4, 8, 9, 14, 15, 1]],
         // ['correct_response' => '45', 'stimuli' => [15, 18], 'alternatives' => [3, 5, 9, 15, 18, 13, 16, 20]],
         // ['correct_response' => '67', 'stimuli' => [9, 4], 'alternatives' => [1, 13, 10, 7, 24, 9, 4, 5]],
         // ['correct_response' => '28', 'stimuli' => [26, 28], 'alternatives' => [3, 26, 7, 8, 10, 11, 5, 28]],

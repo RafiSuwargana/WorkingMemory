@@ -9,29 +9,32 @@
         if (this.timeoutTimer) {
             return;
         }
-        
+
         // Clear any existing timers (safety check)
         this.clearTimer();
 
         this.questionStartTime = Date.now();
         this.debugCountdown = 1200;
 
-        // Start debug countdown if in local environment
-        const isDebugMode = @json($debugTimer);
-        
-        if (isDebugMode) {
-            this.debugInterval = setInterval(() => {
-                this.debugCountdown = Math.max(0, this.debugCountdown - 100);
-                if (this.debugCountdown <= 0) {
-                    clearInterval(this.debugInterval);
-                    this.debugInterval = null;
-                }
-            }, 100);
-        }
-
+        // Always set timeout as backup
         this.timeoutTimer = setTimeout(() => {
             $wire.handleTimeout();
-        }, 1200); // 1.2 seconds
+        }, 1200);
+
+        // Always use countdown interval with manual trigger
+        this.debugInterval = setInterval(() => {
+            this.debugCountdown = Math.max(0, this.debugCountdown - 100);
+            if (this.debugCountdown <= 0) {
+                clearInterval(this.debugInterval);
+                this.debugInterval = null;
+                // Trigger timeout immediately when countdown reaches 0
+                if (this.timeoutTimer) {
+                    clearTimeout(this.timeoutTimer);
+                    this.timeoutTimer = null;
+                    $wire.handleTimeout();
+                }
+            }
+        }, 100);
     },
 
     clearTimer() {
@@ -68,19 +71,33 @@
         }
     }
 }" x-on:keydown.window="handleKeydown($event)"
-    x-on:show-feedback.window="setTimeout(() => { $wire.proceedAfterFeedback(); }, 250)"
-    x-on:show-feedback-retry.window="setTimeout(() => { $wire.proceedAfterRetry(); }, 1500)" x-init="
-        // Auto start timer for real test questions
-        $wire.on('question-loaded', () => {
+    x-on:show-feedback.window="clearTimer(); setTimeout(() => { $wire.proceedAfterFeedback(); }, 250)"
+    x-on:show-feedback-retry.window="clearTimer(); setTimeout(() => { $wire.proceedAfterRetry(); }, 250)"
+    x-on:clear-timer.window="clearTimer()" x-init="
+    $wire.on('question-loaded', () => {
+        // Clear any existing timer first
+        clearTimer();
+        // Only start timer for real test questions
+        if (!@json($isSimulation) && !@json($isTransition) && !@json($isCompleted) && !@json($showFeedback)) {
             setTimeout(() => {
-                if (!@json($isSimulation) && !@json($isTransition) && !@json($isCompleted) && !@json($showFeedback) && !@json($inputDisabled)) {
-                    if (!this.timeoutTimer) {
-                        startTimer();
-                    }
+                // Double check conditions before starting timer
+                if (!@json($showFeedback) && !@json($inputDisabled)) {
+                    startTimer();
                 }
             }, 50);
-        });
-    "
+        }
+    });
+
+    $wire.on('$refresh', () => {
+        // Clear any existing timers on component refresh
+        clearTimer();
+        // Re-check if we need to start timer after refresh
+        setTimeout(() => {
+            if (!@json($isSimulation) && !@json($isTransition) && !@json($isCompleted) && !@json($showFeedback)) {
+                startTimer();
+            }
+        }, 100);
+    });
 ">
     <style>
         .speed-container {
@@ -93,7 +110,7 @@
             width: 100%;
             margin: 0 auto;
         }
-        
+
         /* Optimasi untuk memastikan gambar loading dengan cepat */
         .speed-container img {
             image-rendering: -webkit-optimize-contrast;
@@ -107,21 +124,21 @@
             transform: translate3d(0, 0, 0);
             -webkit-transform: translate3d(0, 0, 0);
         }
-        
+
         /* Critical CSS untuk gambar container */
         .speed-container .w-32.h-32 {
             contain: layout style paint;
             will-change: contents;
         }
-        
+
         /* Preload indicator styles */
         .preload-overlay {
             backdrop-filter: blur(2px);
             -webkit-backdrop-filter: blur(2px);
         }
-        
+
         /* Force image caching */
-        .speed-container img[src*="/images/speed/"] {
+        .speed-container img[src*=" /images/speed/"] {
             /* Prefetch hint for better caching */
             image-rendering: auto;
             object-fit: contain;
@@ -136,49 +153,19 @@
         <!-- Feedback Display -->
         <div class="w-full flex flex-col items-center justify-center text-center mb-4">
             @if($feedbackType === 'correct')
-            <div class="mb-6 text-center">
-                <div class="text-6xl mb-4">✓</div>
-                <h3 class="text-3xl font-bold text-green-600 mb-4">Benar!</h3>
-                <div class="flex justify-center gap-4">
-                    <div class="w-20 h-20 border-2 border-green-500 rounded-lg flex items-center justify-center">
-                        <img src="/images/speed/{{ $currentImages[$correctAnswer-1] }}.png" alt="Correct Answer"
-                            class="max-w-full max-h-full object-contain">
-                    </div>
-                </div>
+            <div class="text-center">
+                <div class="text-9xl mb-8">✓</div>
+                <h3 class="text-6xl font-bold text-green-600">Benar!</h3>
             </div>
             @elseif($feedbackType === 'wrong')
-            <div class="mb-6 text-center">
-                <div class="text-6xl mb-4">✗</div>
-                <h3 class="text-3xl font-bold text-red-600 mb-4">Salah!</h3>
-                <div class="flex justify-center gap-8">
-                    <div class="text-center">
-                        <div class="text-base text-gray-600 mb-2">Jawaban Anda:</div>
-                        <div class="w-20 h-20 border-2 border-red-500 rounded-lg flex items-center justify-center">
-                            <img src="/images/speed/{{ $currentImages[$userAnswer-1] }}.png" alt="Your Answer"
-                                class="max-w-full max-h-full object-contain">
-                        </div>
-                    </div>
-                    <div class="text-center">
-                        <div class="text-base text-gray-600 mb-2">Jawaban Benar:</div>
-                        <div class="w-20 h-20 border-2 border-green-500 rounded-lg flex items-center justify-center">
-                            <img src="/images/speed/{{ $currentImages[$correctAnswer-1] }}.png" alt="Correct Answer"
-                                class="max-w-full max-h-full object-contain">
-                        </div>
-                    </div>
-                </div>
+            <div class="text-center">
+                <div class="text-9xl mb-8">✗</div>
+                <h3 class="text-6xl font-bold text-red-600">Salah!</h3>
             </div>
             @elseif($feedbackType === 'timeout')
-            <div class="mb-6 text-center">
-                <div class="text-6xl mb-4">⏰</div>
-                <h3 class="text-3xl font-bold text-orange-600 mb-4">Waktu Habis!</h3>
-                <div class="text-center">
-                    <div class="text-base text-gray-600 mb-2">Jawaban Benar:</div>
-                    <div
-                        class="w-20 h-20 border-2 border-green-500 rounded-lg flex items-center justify-center mx-auto">
-                        <img src="/images/speed/{{ $currentImages[$correctAnswer-1] }}.png" alt="Correct Answer"
-                            class="max-w-full max-h-full object-contain">
-                    </div>
-                </div>
+            <div class="text-center">
+                <div class="text-9xl mb-8">⏰</div>
+                <h3 class="text-6xl font-bold text-orange-600">Waktu Habis!</h3>
             </div>
             @endif
         </div>
@@ -189,7 +176,7 @@
             <div class="mb-6 w-full flex flex-col items-center">
                 <div class="mb-6 text-center">
                     <h3 class="text-2xl font-bold text-gray-800 mb-4">
-                        Jawaban kamu: {{ $totalCorrect }}/50
+                        Jawaban kamu: {{ $totalCorrect }}/{{ $totalQuestions }}
                     </h3>
                     <p class="text-xl text-gray-700 mb-2">
                         Tingkat Akurasi: {{ $accuracy }}%
@@ -198,7 +185,8 @@
                         Total Waktu: {{ number_format($testSession->total_time / 1000, 1) }} detik
                     </p>
                     <p class="text-xl text-gray-700 mb-4">
-                        Rata-rata Waktu Respon: {{ number_format(($testSession->average_response_time ?? 0) / 1000, 2) }} detik
+                        Rata-rata Waktu Respon: {{ number_format(($testSession->average_response_time ?? 0) / 1000, 2)
+                        }} detik
                     </p>
                 </div>
 
@@ -313,13 +301,8 @@
             </h2>
 
             @if($debugTimer)
-            <div class="mb-2 p-2 bg-yellow-100 border border-yellow-300 rounded text-base font-mono" x-init="
-                // Auto-start timer for real test phase after delay (only if no timer exists)
-                setTimeout(() => {
-                    checkAndStartTimer();
-                }, 500);
-            ">
-                Debug Timer: <span x-text="(debugCountdown / 1000).toFixed(1)"></span>s 
+            <div class="mb-2 p-2 bg-yellow-100 border border-yellow-300 rounded text-base font-mono">
+                Debug Timer: <span x-text="(debugCountdown / 1000).toFixed(1)"></span>s
                 <span x-show="debugCountdown <= 0" class="text-red-600 font-bold">TIMEOUT!</span>
                 <div class="text-xs text-gray-600 mt-1">
                     Timer state: <span x-text="timeoutTimer ? 'Running' : 'Stopped'"></span> |
@@ -335,12 +318,7 @@
                 Klik angka 1 atau angka 2 pada keyboard!
             </h3>
 
-            <div class="flex justify-center items-center gap-8 mb-4" x-init="
-                // Final fallback: Auto-start timer when real test images are rendered
-                setTimeout(() => {
-                    checkAndStartTimer();
-                }, 800);
-            ">
+            <div class="flex justify-center items-center gap-8 mb-4">
                 <!-- Image 1 -->
                 <div class="text-center">
                     <div class="w-32 h-32 border-2 border-gray-300 rounded-lg mb-2 flex items-center justify-center">
@@ -365,12 +343,10 @@
         @endif
 
     </div>
-    
+
     <!-- Hidden images for preloading - ensures all images are cached -->
     <div style="position: absolute; left: -9999px; top: -9999px; visibility: hidden; pointer-events: none;">
-        @for($i = 1; $i <= 15; $i++)
-        <img src="/images/speed/{{ $i }}.png" alt="" style="width: 1px; height: 1px;">
-        @endfor
+        @for($i = 1; $i <= 15; $i++) <img src="/images/speed/{{ $i }}.png" alt="" style="width: 1px; height: 1px;">
+            @endfor
     </div>
 </div>
-

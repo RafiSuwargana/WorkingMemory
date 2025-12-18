@@ -64,7 +64,7 @@
         }
     }
 }" x-on:startTestTimer.window="startTestTimer()"
-    x-on:show-capacity-feedback.window="clearTestTimer(); setTimeout(() => { $wire.hideFeedbackAndProceed(); }, 200)">
+    x-on:show-capacity-feedback.window="clearTestTimer(); setTimeout(() => { $wire.hideFeedbackAndProceed(); }, 250)">
     <div class="w-full max-w-6xl mx-auto p-4">
 
 
@@ -74,17 +74,17 @@
             <div class="mb-8">
                 <h2 class="text-3xl font-bold text-blue-600 mb-4">Memuat Gambar Tes...</h2>
                 <p class="text-lg text-gray-600 mb-6">Mohon tunggu sementara kami menyiapkan gambar untuk tes Anda.</p>
-                
+
                 <!-- Progress Bar -->
                 <div class="w-80 bg-gray-200 rounded-full h-4 mx-auto mb-4">
-                    <div class="bg-blue-600 h-4 rounded-full transition-all duration-300" 
-                         style="width: {{ $preloadProgress }}%"></div>
+                    <div class="bg-blue-600 h-4 rounded-full transition-all duration-300"
+                        style="width: {{ $preloadProgress }}%"></div>
                 </div>
-                
+
                 <!-- Progress Text -->
                 <p class="text-sm text-gray-500">{{ $preloadProgress }}% selesai</p>
             </div>
-            
+
             <!-- Loading Animation -->
             <div class="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-600"></div>
         </div>
@@ -104,7 +104,8 @@
                         '0' }} detik
                     </p>
                     <p class="text-xl text-gray-700 mb-4">
-                        Rata-rata Waktu Respon: {{ number_format(($testSession->average_response_time ?? 0) / 1000, 2) }} detik
+                        Rata-rata Waktu Respon: {{ number_format(($testSession->average_response_time ?? 0) / 1000, 2)
+                        }} detik
                     </p>
                 </div>
                 <div class="text-center">
