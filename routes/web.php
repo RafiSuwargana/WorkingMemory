@@ -9,6 +9,9 @@ use App\Livewire\Tests\InstructionsSpeed;
 use App\Livewire\Tests\SpeedTask;
 use App\Livewire\Tests\EnergyTask;
 use App\Livewire\Tests\CapacityTask;
+use App\Livewire\Admin\Dashboard as AdminDashboard;
+use App\Livewire\Admin\Users as AdminUsers;
+use App\Livewire\Admin\Laporan as AdminLaporan;
 
 // Landing page - redirect to dashboard if already logged in
 Route::get('/', function () {
@@ -59,6 +62,13 @@ Route::middleware(['auth'])->group(function () {
         session()->regenerateToken();
         return redirect('/');
     })->name('logout');
+});
+
+// Admin routes
+Route::middleware(['auth', 'role:admin'])->prefix('admin')->group(function () {
+    Route::get('/dashboard', AdminDashboard::class)->name('admin.dashboard');
+    Route::get('/users', AdminUsers::class)->name('admin.users');
+    Route::get('/laporan', AdminLaporan::class)->name('admin.laporan');
 });
 
 // Route::get('/profile', 'profile')

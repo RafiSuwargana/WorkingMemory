@@ -10,6 +10,14 @@ use Livewire\Attributes\Layout;
 #[Layout('components.layouts.app')]
 class Dashboard extends Component
 {
+    public function mount()
+    {
+        // Redirect admin to admin dashboard
+        if (Auth::user()->hasRole('admin')) {
+            return redirect()->route('admin.dashboard');
+        }
+    }
+
     public function logout()
     {
         Auth::logout();
@@ -40,6 +48,7 @@ class Dashboard extends Component
     public function render()
     {
         $user = Auth::user();
+
         $testSessions = TestSession::where('user_id', $user->id)
             ->orderBy('created_at', 'desc')
             ->take(5)
