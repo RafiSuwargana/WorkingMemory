@@ -3,12 +3,14 @@
 namespace App\Livewire\Tests;
 
 use Livewire\Component;
+use Livewire\Attributes\Layout;
 use App\Models\TestSession;
 use App\Models\TestResult;
 use App\Models\TestAnswer;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 
+#[Layout('components.layouts.task-standalone')]
 class EnergyTask extends Component
 {
     protected $listeners = [

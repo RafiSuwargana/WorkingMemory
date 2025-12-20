@@ -11,7 +11,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
-#[Layout('components.layouts.app')]
+#[Layout('components.layouts.task-standalone')]
 class SpeedTask extends Component
 {
     private const TIMEOUT_MS = 1200;

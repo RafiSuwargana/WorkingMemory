@@ -10,7 +10,7 @@ use App\Models\TestAnswer;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 
-#[Layout('components.layouts.app')]
+#[Layout('components.layouts.task-standalone')]
 class CapacityTask extends Component
 {
     protected $listeners = [
