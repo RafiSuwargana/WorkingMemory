@@ -142,96 +142,98 @@
         <div class="min-h-screen flex items-center justify-center">
             @if($feedbackType === 'correct')
             <div class="text-center">
-                <div class="text-9xl mb-8">✓</div>
-                <h3 class="text-6xl font-bold text-green-600">Benar!</h3>
+                <h3 class="text-xl font-bold text-green-600">Benar!</h3>
+                <div class="text-xl mb-8">🟢</div>
             </div>
             @elseif($feedbackType === 'wrong')
             <div class="text-center">
-                <div class="text-9xl mb-8">✗</div>
-                <h3 class="text-6xl font-bold text-red-600">Salah!</h3>
+                <h3 class="text-xl font-bold text-red-600">Salah!</h3>
+                <div class="text-xl mb-8">🔴</div>
             </div>
             @elseif($feedbackType === 'slow')
             <div class="text-center">
-                <div class="text-9xl mb-8">⏰</div>
-                <h3 class="text-6xl font-bold text-orange-600">Kamu terlalu lama mengerjakan soal ini!</h3>
+                <h3 class="text-xl font-bold text-orange-600">Waktu Habis!</h3>
+                <div class="text-xl mb-8">⌛</div>
             </div>
             @endif
-        </div>
-        @elseif($isTesting)
-        <!-- Testing Phase -->
-        <div class="bg-white rounded-lg shadow-md p-8" x-init="
+            @elseif($isTesting)
+            <!-- Testing Phase -->
+            <div class="bg-white rounded-lg shadow-md p-8" x-init="
             startTestTimer();
         ">
-            <div class="text-center mb-6">
-                <h2 class="text-2xl font-bold text-blue-600 mb-4">Pilih gambar yang telah Anda ingat!</h2>
-                <p class="text-gray-600">Klik gambar yang sesuai dengan gambar yang ditampilkan sebelumnya</p>
-                <div class="mt-2">
-                    <span class="text-sm text-gray-500">
-                        Dipilih: <span x-text="selectedImages.length"></span>/{{ count($correctAnswers) }}
-                    </span>
+                <div class="text-center mb-6">
+                    <h2 class="text-2xl font-bold text-blue-600 mb-4">Pilih gambar yang telah Anda ingat!</h2>
+                    <p class="text-gray-600">Klik gambar yang sesuai dengan gambar yang ditampilkan sebelumnya</p>
+                    <div class="mt-2">
+                        <span class="text-sm text-gray-500">
+                            Dipilih: <span x-text="selectedImages.length"></span>/{{ count($correctAnswers) }}
+                        </span>
+                    </div>
+                    @if($debugTimer)
+                    <div
+                        class="mt-2 p-2 bg-yellow-100 border border-yellow-300 rounded text-base font-mono inline-block">
+                        Debug Timer: <span
+                            x-text="Math.max(0, Math.ceil(debugCountdown / 100) / 10).toFixed(1)"></span>s
+                    </div>
+                    @endif
                 </div>
-                @if($debugTimer)
-                <div class="mt-2 p-2 bg-yellow-100 border border-yellow-300 rounded text-base font-mono inline-block">
-                    Debug Timer: <span x-text="Math.max(0, Math.ceil(debugCountdown / 100) / 10).toFixed(1)"></span>s
-                </div>
-                @endif
-            </div>
 
 
 
-            <!-- Test Images Grid (Always 8 images in 4x2 grid) -->
-            <div class="grid grid-cols-4 gap-4 max-w-4xl mx-auto">
-                @foreach($testImages as $index => $imageNumber)
-                <div class="relative">
-                    <button @click="toggleImage({{ $index }})" :disabled="@json($answered)" :class="{
+                <!-- Test Images Grid (Always 8 images in 4x2 grid) -->
+                <div class="grid grid-cols-4 gap-4 max-w-4xl mx-auto">
+                    @foreach($testImages as $index => $imageNumber)
+                    <div class="relative">
+                        <button @click="toggleImage({{ $index }})" :disabled="@json($answered)" :class="{
                             'border-blue-500 bg-blue-50 shadow-lg': isSelected({{ $index }}),
                             'border-gray-200': !isSelected({{ $index }}),
                             'cursor-not-allowed opacity-50': @json($answered)
                         }"
-                        class="w-full aspect-square bg-gray-50 rounded-lg p-2 border-2 transition-all duration-200 hover:shadow-md">
-                        <img src="{{ asset('images/capacity/' . $imageNumber . '.png') }}"
-                            alt="Test Image {{ $imageNumber }}" class="w-full h-full object-contain" loading="eager">
-                    </button>
+                            class="w-full aspect-square bg-gray-50 rounded-lg p-2 border-2 transition-all duration-200 hover:shadow-md">
+                            <img src="{{ asset('images/capacity/' . $imageNumber . '.png') }}"
+                                alt="Test Image {{ $imageNumber }}" class="w-full h-full object-contain"
+                                loading="eager">
+                        </button>
 
-                    <div x-show="isSelected({{ $index }})"
-                        class="absolute -top-2 -right-2 w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center">
-                        <span class="text-white text-xs font-bold"
-                            x-text="selectedImages.indexOf({{ $index }}) + 1"></span>
+                        <div x-show="isSelected({{ $index }})"
+                            class="absolute -top-2 -right-2 w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center">
+                            <span class="text-white text-xs font-bold"
+                                x-text="selectedImages.indexOf({{ $index }}) + 1"></span>
+                        </div>
+                    </div>
+                    @endforeach
+                </div>
+
+                @if($answered)
+                <div class="mt-6 text-center">
+                    <div class="inline-flex items-center justify-center px-4 py-2 rounded-lg bg-gray-100">
+                        <span class="text-gray-600">Memproses jawaban...</span>
                     </div>
                 </div>
-                @endforeach
+                @endif
             </div>
+            @endif
 
-            @if($answered)
-            <div class="mt-6 text-center">
-                <div class="inline-flex items-center justify-center px-4 py-2 rounded-lg bg-gray-100">
-                    <span class="text-gray-600">Memproses jawaban...</span>
+            <!-- Progress Bar -->
+            @if(!$isCompleted && !$showFeedback)
+            <div class="mt-6">
+                <div class="w-full bg-gray-200 rounded-full h-3">
+                    <div class="bg-blue-600 h-3 rounded-full transition-all duration-300"
+                        style="width: {{ ($currentTrial / $totalTrials) * 100 }}%"></div>
+                </div>
+                <div class="text-center text-sm text-gray-500 mt-2">
+                    Progress: {{ $currentTrial }} / {{ $totalTrials }}
                 </div>
             </div>
             @endif
         </div>
-        @endif
-
-        <!-- Progress Bar -->
-        @if(!$isCompleted && !$showFeedback)
-        <div class="mt-6">
-            <div class="w-full bg-gray-200 rounded-full h-3">
-                <div class="bg-blue-600 h-3 rounded-full transition-all duration-300"
-                    style="width: {{ ($currentTrial / $totalTrials) * 100 }}%"></div>
-            </div>
-            <div class="text-center text-sm text-gray-500 mt-2">
-                Progress: {{ $currentTrial }} / {{ $totalTrials }}
-            </div>
-        </div>
-        @endif
     </div>
-</div>
 
-<!-- Include preloader script -->
-<script src="{{ asset('js/capacity-preloader.js') }}"></script>
+    <!-- Include preloader script -->
+    <script src="{{ asset('js/capacity-preloader.js') }}"></script>
 
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
     let memorizeTimer;
     let preloadStarted = false;
 
@@ -285,4 +287,4 @@
         }
     }
 });
-</script>
+    </script>

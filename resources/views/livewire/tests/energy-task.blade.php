@@ -127,18 +127,18 @@
         <div class="w-full flex flex-col items-center justify-center text-center mb-4">
             @if($feedbackType === 'correct')
             <div class="text-center">
-                <div class="text-9xl mb-8">✓</div>
-                <h3 class="text-6xl font-bold text-green-600">Benar!</h3>
+                <h3 class="text-xl font-bold text-green-600">Benar!</h3>
+                <div class="text-xl mb-8">🟢</div>
             </div>
             @elseif($feedbackType === 'wrong')
             <div class="text-center">
-                <div class="text-9xl mb-8">✗</div>
-                <h3 class="text-6xl font-bold text-red-600">Salah!</h3>
+                <h3 class="text-xl font-bold text-red-600">Salah!</h3>
+                <div class="text-xl mb-8">🔴</div>
             </div>
             @elseif($feedbackType === 'slow')
             <div class="text-center">
-                <div class="text-9xl mb-8">⏰</div>
-                <h3 class="text-6xl font-bold text-orange-600">Kamu terlalu lama mengerjakan soal ini!</h3>
+                <h3 class="text-xl font-bold text-orange-600">Waktu Habis!</h3>
+                <div class="text-xl mb-8">⌛</div>
             </div>
             @endif
         </div>

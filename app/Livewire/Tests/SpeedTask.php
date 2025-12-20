@@ -9,10 +9,13 @@ use App\Models\TestResult;
 use App\Models\TestAnswer;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 
 #[Layout('components.layouts.app')]
 class SpeedTask extends Component
 {
+    private const TIMEOUT_MS = 1200;
+
     protected $listeners = ['spacePressed' => 'handleSpacePress', 'numberPressed' => 'handleAnswer'];
 
     public $currentQuestion = 1;
@@ -36,8 +39,9 @@ class SpeedTask extends Component
     public $timeoutOccurred = false;
     public $inputDisabled = false;
     public $questionStartTime = null;
+    public $questionUid = null; // Unique token per rendered question; prevents stale timers from previous questions
     public $debugTimer = false; // For local debugging
-    public $remainingTime = 1200; // Debug timer countdown
+    public $remainingTime = self::TIMEOUT_MS; // Debug timer countdown
 
     public $testSession;
 
@@ -264,9 +268,25 @@ class SpeedTask extends Component
         $this->answered = false;
         $this->userAnswer = null;
         $this->inputDisabled = false;
+        $this->timeoutOccurred = false;
         $this->questionStartTime = microtime(true);
+        $this->questionUid = (string) Str::uuid();
 
         Log::info('Question loaded - Images: [' . implode(', ', $this->currentImages) . '], Correct: ' . $this->correctAnswer);
+
+        // Notify browser that a new question (token) has started so it can reset the timer.
+        // This is the safest way to avoid chained timeouts across Livewire re-renders.
+        $this->dispatch(
+            'question-changed',
+            questionUid: $this->questionUid,
+            isSimulation: $this->isSimulation,
+            isTransition: $this->isTransition,
+            isCompleted: $this->isCompleted,
+            showFeedback: $this->showFeedback,
+            inputDisabled: $this->inputDisabled,
+            timeoutMs: self::TIMEOUT_MS,
+            debugTimer: $this->debugTimer,
+        );
 
         // Dispatch event to start timer for real questions, but not during feedback
         if (!$this->isSimulation && !$this->isTransition && !$this->isCompleted && !$this->showFeedback) {
@@ -316,16 +336,41 @@ class SpeedTask extends Component
         $this->dispatch('$refresh');
     }
 
-    public function handleTimeout()
+    public function handleTimeout($questionUid = null, $clientResponseTime = null)
     {
+        // Back-compat: old client called handleTimeout(1200)
+        if (is_numeric($questionUid) && $clientResponseTime === null) {
+            $clientResponseTime = $questionUid;
+            $questionUid = null;
+        }
+
+        // Ignore stale timer events from previous question renders
+        if (is_string($questionUid) && $this->questionUid && $questionUid !== $this->questionUid) {
+            return;
+        }
+
         if ($this->inputDisabled || $this->answered || $this->isSimulation || $this->isTransition || $this->isCompleted) {
             return;
         }
+
+        // Stop client timers ASAP
+        $this->dispatch('clear-timer');
 
         $this->inputDisabled = true;
         $this->answered = true;
         $this->timeoutOccurred = true;
         $this->feedbackType = 'timeout';
+
+        // IMPORTANT: keep timeout duration fixed; server-side questionStartTime differs from
+        // when the client timer actually starts (network + render delay), which can make
+        // computed durations look random.
+        $responseTime = self::TIMEOUT_MS;
+        if (is_numeric($clientResponseTime)) {
+            $clientResponseTime = (int) round($clientResponseTime);
+            if ($clientResponseTime > 0 && $clientResponseTime < 60000) {
+                $responseTime = $clientResponseTime;
+            }
+        }
 
         // Save timeout result
         TestResult::create([
@@ -338,9 +383,9 @@ class SpeedTask extends Component
             'correct_answer' => $this->correctAnswer,
             'user_answer' => null,
             'is_correct' => false,
-            'response_time' => 1200, // 1.2 seconds
+            'response_time' => $responseTime,
             'timeout' => true,
-            'question_started_at' => now()->subMilliseconds(1200),
+            'question_started_at' => now()->subMilliseconds($responseTime),
             'answered_at' => now(),
         ]);
 
@@ -351,8 +396,19 @@ class SpeedTask extends Component
         $this->dispatch('show-feedback');
     }
 
-    public function handleAnswer($position)
+    public function handleAnswer($position, $questionUid = null, $clientResponseTime = null)
     {
+        // Back-compat: old client called handleAnswer(pos, rt)
+        if (is_numeric($questionUid) && $clientResponseTime === null) {
+            $clientResponseTime = $questionUid;
+            $questionUid = null;
+        }
+
+        // Ignore stale key presses from previous question renders
+        if (is_string($questionUid) && $this->questionUid && $questionUid !== $this->questionUid) {
+            return;
+        }
+
         if ($this->inputDisabled || ($this->answered && !$this->isTransition)) {
             return; // Prevent multiple answers and disabled input
         }
@@ -369,15 +425,31 @@ class SpeedTask extends Component
 
         $this->answered = true;
         $this->userAnswer = $position;
-        $this->timeoutOccurred = false;
 
         // Calculate response time
         $responseTime = ($this->questionStartTime) ?
             round((microtime(true) - $this->questionStartTime) * 1000) : 0;
 
+        // Prefer client-side timing (aligns with when the timer actually started in the browser).
+        if (is_numeric($clientResponseTime)) {
+            $clientResponseTime = (int) round($clientResponseTime);
+            if ($clientResponseTime >= 0 && $clientResponseTime < 60000) {
+                $responseTime = $clientResponseTime;
+            }
+        }
+
+        // Hard guard: we never accept answers beyond the test timeout.
+        // Client should already block this, but this makes the server authoritative too.
+        if (!$this->isSimulation && $responseTime > self::TIMEOUT_MS) {
+            $this->inputDisabled = false;
+            $this->answered = false;
+            return;
+        }
+
         if (!$this->isSimulation) {
             // Real question - save and score
             $isCorrect = ($position == $this->correctAnswer);
+
             if ($isCorrect) {
                 $this->totalCorrect++;
                 $this->feedbackType = 'correct';
@@ -476,7 +548,7 @@ class SpeedTask extends Component
     {
         // Clear timer explicitly before proceeding
         $this->dispatch('clear-timer');
-        
+
         $this->showFeedback = false;
         $this->feedbackType = null;
 
@@ -509,7 +581,7 @@ class SpeedTask extends Component
     {
         // Clear timer explicitly before retry
         $this->dispatch('clear-timer');
-        
+
         $this->showFeedback = false;
         $this->feedbackType = null;
         $this->answered = false;
@@ -539,7 +611,7 @@ class SpeedTask extends Component
     {
         // Clear any existing timers first
         $this->dispatch('clear-timer');
-        
+
         // Proceed directly to real test from transition
         $this->isTransition = false;
         $this->isSimulation = false;

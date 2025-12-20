@@ -1,56 +1,105 @@
 <div class="min-h-screen bg-white flex items-center justify-center p-4" x-data="{
+    // Local mirror of Livewire state (kept in sync via browser events)
+    questionUid: @js($questionUid),
+    isSimulation: @js($isSimulation),
+    isTransition: @js($isTransition),
+    isCompleted: @js($isCompleted),
+    showFeedback: @js($showFeedback),
+    inputDisabled: @js($inputDisabled),
+    debugTimerEnabled: @js($debugTimer),
+    timeoutMs: 1200,
+
     timeoutTimer: null,
     questionStartTime: null,
     debugCountdown: 1200,
     debugInterval: null,
+    localTimeoutFired: false,
 
-    startTimer() {
-        // Prevent multiple timers from starting
-        if (this.timeoutTimer) {
-            return;
-        }
-
-        // Clear any existing timers (safety check)
+    init() {
+        // Always clear any leftover timers on init (handles Livewire DOM re-renders)
         this.clearTimer();
 
+        // If we land directly on a real question (e.g., after refresh), start timer.
+        if (!this.isSimulation && !this.isTransition && !this.isCompleted && !this.showFeedback && !this.inputDisabled) {
+            setTimeout(() => this.startTimer(), 50);
+        }
+    },
+
+    onQuestionChanged(detail) {
+        // Keep local mirror in sync
+        this.questionUid = detail?.questionUid ?? null;
+        this.isSimulation = !!detail?.isSimulation;
+        this.isTransition = !!detail?.isTransition;
+        this.isCompleted = !!detail?.isCompleted;
+        this.showFeedback = !!detail?.showFeedback;
+        this.inputDisabled = !!detail?.inputDisabled;
+        this.debugTimerEnabled = !!detail?.debugTimer;
+        this.timeoutMs = Number.isFinite(detail?.timeoutMs) ? detail.timeoutMs : 1200;
+
+        // Always reset timer on a newly started (tokened) question
+        this.clearTimer();
+        if (!this.isSimulation && !this.isTransition && !this.isCompleted && !this.showFeedback && !this.inputDisabled) {
+            setTimeout(() => this.startTimer(), 50);
+        }
+    },
+
+    startTimer() {
+        // Always reset timers when a new question starts
+        this.clearTimer();
+
+        // Reset local timeout gate
+        this.localTimeoutFired = false;
+
         this.questionStartTime = Date.now();
-        this.debugCountdown = 1200;
+        this.debugCountdown = this.timeoutMs;
 
-        // Always set timeout as backup
-        this.timeoutTimer = setTimeout(() => {
-            $wire.handleTimeout();
-        }, 1200);
+        // Single source of truth for timeout.
+        // Store timer IDs on window so they can be cleared even if Alpine is re-initialized
+        // due to Livewire re-rendering this component.
+        const uid = this.questionUid;
+        window.__speedTaskTimeoutTimer = setTimeout(() => {
+            // IMPORTANT: block input immediately on the client.
+            // Livewire state updates are async, so without this users can still answer
+            // after 1200ms during the round-trip.
+            this.localTimeoutFired = true;
+            $wire.handleTimeout(uid, this.timeoutMs);
+        }, this.timeoutMs);
+        this.timeoutTimer = window.__speedTaskTimeoutTimer;
 
-        // Always use countdown interval with manual trigger
-        this.debugInterval = setInterval(() => {
-            this.debugCountdown = Math.max(0, this.debugCountdown - 100);
-            if (this.debugCountdown <= 0) {
-                clearInterval(this.debugInterval);
-                this.debugInterval = null;
-                // Trigger timeout immediately when countdown reaches 0
-                if (this.timeoutTimer) {
-                    clearTimeout(this.timeoutTimer);
-                    this.timeoutTimer = null;
-                    $wire.handleTimeout();
+        // Debug countdown (visual only) when in local env
+        if (this.debugTimerEnabled) {
+            window.__speedTaskDebugInterval = setInterval(() => {
+                this.debugCountdown = Math.max(0, this.debugCountdown - 100);
+                if (this.debugCountdown <= 0) {
+                    clearInterval(window.__speedTaskDebugInterval);
+                    window.__speedTaskDebugInterval = null;
+                    this.debugInterval = null;
                 }
-            }
-        }, 100);
+            }, 100);
+            this.debugInterval = window.__speedTaskDebugInterval;
+        }
     },
 
     clearTimer() {
-        if (this.timeoutTimer) {
-            clearTimeout(this.timeoutTimer);
-            this.timeoutTimer = null;
+        if (window.__speedTaskTimeoutTimer) {
+            clearTimeout(window.__speedTaskTimeoutTimer);
+            window.__speedTaskTimeoutTimer = null;
         }
-        if (this.debugInterval) {
-            clearInterval(this.debugInterval);
-            this.debugInterval = null;
+        if (window.__speedTaskDebugInterval) {
+            clearInterval(window.__speedTaskDebugInterval);
+            window.__speedTaskDebugInterval = null;
         }
+
+        // Reset local timeout gate
+        this.localTimeoutFired = false;
+
+        this.timeoutTimer = null;
+        this.debugInterval = null;
     },
 
     handleKeydown(event) {
         // Check if input is disabled
-        if (@json($inputDisabled) || @json($showFeedback)) {
+        if (this.localTimeoutFired || this.inputDisabled || this.showFeedback) {
             return;
         }
 
@@ -62,43 +111,20 @@
         if (event.key === '1') {
             event.preventDefault();
             this.clearTimer();
-            $wire.handleAnswer(1);
+            const rt = this.questionStartTime ? (Date.now() - this.questionStartTime) : null;
+            $wire.handleAnswer(1, this.questionUid, rt);
         }
         if (event.key === '2') {
             event.preventDefault();
             this.clearTimer();
-            $wire.handleAnswer(2);
+            const rt = this.questionStartTime ? (Date.now() - this.questionStartTime) : null;
+            $wire.handleAnswer(2, this.questionUid, rt);
         }
     }
-}" x-on:keydown.window="handleKeydown($event)"
+}" x-on:keydown.window="handleKeydown($event)" x-on:question-changed.window="onQuestionChanged($event.detail)"
     x-on:show-feedback.window="clearTimer(); setTimeout(() => { $wire.proceedAfterFeedback(); }, 250)"
     x-on:show-feedback-retry.window="clearTimer(); setTimeout(() => { $wire.proceedAfterRetry(); }, 250)"
-    x-on:clear-timer.window="clearTimer()" x-init="
-    $wire.on('question-loaded', () => {
-        // Clear any existing timer first
-        clearTimer();
-        // Only start timer for real test questions
-        if (!@json($isSimulation) && !@json($isTransition) && !@json($isCompleted) && !@json($showFeedback)) {
-            setTimeout(() => {
-                // Double check conditions before starting timer
-                if (!@json($showFeedback) && !@json($inputDisabled)) {
-                    startTimer();
-                }
-            }, 50);
-        }
-    });
-
-    $wire.on('$refresh', () => {
-        // Clear any existing timers on component refresh
-        clearTimer();
-        // Re-check if we need to start timer after refresh
-        setTimeout(() => {
-            if (!@json($isSimulation) && !@json($isTransition) && !@json($isCompleted) && !@json($showFeedback)) {
-                startTimer();
-            }
-        }, 100);
-    });
-">
+    x-on:clear-timer.window="clearTimer()">
     <style>
         .speed-container {
             display: flex;
@@ -154,18 +180,18 @@
         <div class="w-full flex flex-col items-center justify-center text-center mb-4">
             @if($feedbackType === 'correct')
             <div class="text-center">
-                <div class="text-9xl mb-8">✓</div>
-                <h3 class="text-6xl font-bold text-green-600">Benar!</h3>
+                <h3 class="text-xl font-bold text-green-600">Benar!</h3>
+                <div class="text-xl mb-8">🟢</div>
             </div>
             @elseif($feedbackType === 'wrong')
             <div class="text-center">
-                <div class="text-9xl mb-8">✗</div>
-                <h3 class="text-6xl font-bold text-red-600">Salah!</h3>
+                <h3 class="text-xl font-bold text-red-600">Salah!</h3>
+                <div class="text-xl mb-8">🔴</div>
             </div>
             @elseif($feedbackType === 'timeout')
             <div class="text-center">
-                <div class="text-9xl mb-8">⏰</div>
-                <h3 class="text-6xl font-bold text-orange-600">Waktu Habis!</h3>
+                <h3 class="text-xl font-bold text-orange-600">Waktu Habis!</h3>
+                <div class="text-xl mb-8">⌛</div>
             </div>
             @endif
         </div>
