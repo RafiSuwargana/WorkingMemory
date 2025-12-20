@@ -40,7 +40,7 @@ class CapacityTask extends Component
     public $totalCorrect = 0;
     public $accuracy = 0;
 
-    public $memorizeTimeLeft = 10; // Timer untuk fase memorisasi
+    public $memorizeTimeLeft = 5; // Timer untuk fase memorisasi
     public $testSession;
     public $showDebugInfo = false; // Set true untuk melihat kunci jawaban
 
@@ -175,7 +175,7 @@ class CapacityTask extends Component
         $this->isTesting = false;
         $this->answered = false;
         $this->userAnswers = [];
-        $this->memorizeTimeLeft = 10;
+        $this->memorizeTimeLeft = 5;
 
         // Start countdown
         $this->dispatch('startMemorizeTimer');
