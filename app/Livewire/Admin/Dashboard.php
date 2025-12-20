@@ -12,9 +12,8 @@ use Illuminate\Support\Facades\Auth;
 class Dashboard extends Component
 {
     public $totalUsers = 0;
-    public $totalTests = 0;
-    public $completedTests = 0;
-    public $inProgressTests = 0;
+    public $usersCompleted3Tests = 0;
+    public $usersNotCompleted3Tests = 0;
 
     public function mount()
     {
@@ -29,9 +28,19 @@ class Dashboard extends Component
     public function loadStatistics()
     {
         $this->totalUsers = User::role('peserta')->count();
-        $this->totalTests = TestSession::count();
-        $this->completedTests = TestSession::where('status', 'completed')->count();
-        $this->inProgressTests = TestSession::where('status', 'in_progress')->count();
+
+        // Count users who have completed 3 tests
+        $this->usersCompleted3Tests = User::role('peserta')
+            ->withCount([
+                'testSessions' => function ($query) {
+                    $query->where('status', 'completed');
+                }
+            ])
+            ->having('test_sessions_count', '>=', 3)
+            ->count();
+
+        // Count users who have not completed 3 tests
+        $this->usersNotCompleted3Tests = $this->totalUsers - $this->usersCompleted3Tests;
     }
 
     public function render()
