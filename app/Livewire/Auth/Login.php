@@ -50,25 +50,27 @@ class Login extends Component
 
         try {
             // Attempt login
-            if (Auth::attempt([
-                'email' => $this->email,
-                'password' => $this->password
-            ], $this->remember)) {
-                
+            if (
+                Auth::attempt([
+                    'email' => $this->email,
+                    'password' => $this->password
+                ], $this->remember)
+            ) {
+
                 session()->regenerate();
-                
+
                 Log::info('✅ LOGIN SUCCESS', ['user_id' => Auth::id()]);
-                
+
                 $this->message = 'LOGIN BERHASIL! Redirecting...';
-                
+
                 // Redirect to dashboard
                 return redirect()->route('dashboard');
-                
+
             } else {
                 Log::warning('❌ LOGIN FAILED', ['email' => $this->email]);
                 $this->error = 'Email atau password salah';
             }
-            
+
         } catch (\Exception $e) {
             Log::error('❌ LOGIN ERROR: ' . $e->getMessage());
             $this->error = 'Terjadi kesalahan: ' . $e->getMessage();
@@ -81,20 +83,31 @@ class Login extends Component
     private function isMobileDevice()
     {
         $userAgent = request()->userAgent();
-        
+
         // List of mobile device keywords
         $mobileKeywords = [
-            'Mobile', 'Android', 'iPhone', 'iPad', 'iPod', 
-            'BlackBerry', 'Windows Phone', 'webOS', 'Opera Mini',
-            'IEMobile', 'Opera Mobi', 'Samsung', 'Nokia', 'Huawei'
+            'Mobile',
+            'Android',
+            'iPhone',
+            'iPad',
+            'iPod',
+            'BlackBerry',
+            'Windows Phone',
+            'webOS',
+            'Opera Mini',
+            'IEMobile',
+            'Opera Mobi',
+            'Samsung',
+            'Nokia',
+            'Huawei'
         ];
-        
+
         foreach ($mobileKeywords as $keyword) {
             if (stripos($userAgent, $keyword) !== false) {
                 return true;
             }
         }
-        
+
         return false;
     }
 
