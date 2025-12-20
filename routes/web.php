@@ -71,8 +71,8 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->group(function () {
     Route::get('/laporan', AdminLaporan::class)->name('admin.laporan');
 });
 
-// Route::get('/profile', 'profile')
-//     ->middleware(['auth'])
-//     ->name('profile');
+Route::view('profile', 'profile')
+    ->middleware(['auth'])
+    ->name('profile');
 
 require __DIR__ . '/auth.php';

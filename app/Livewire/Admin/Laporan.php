@@ -9,6 +9,8 @@ use App\Models\User;
 use App\Models\TestSession;
 use App\Models\TestResult;
 use Illuminate\Support\Facades\Auth;
+use App\Exports\TestResultsExport;
+use Maatwebsite\Excel\Facades\Excel;
 
 #[Layout('components.layouts.app')]
 class Laporan extends Component
@@ -16,9 +18,9 @@ class Laporan extends Component
     use WithPagination;
 
     public $search = '';
-    public $filterTestType = '';
     public $selectedUser = null;
     public $showDetailModal = false;
+    public $showExportModal = false;
     public $testDetails = [];
 
     public function mount()
@@ -34,9 +36,27 @@ class Laporan extends Component
         $this->resetPage();
     }
 
-    public function updatingFilterTestType()
+    public function openExportModal()
     {
-        $this->resetPage();
+        $this->showExportModal = true;
+    }
+
+    public function closeExportModal()
+    {
+        $this->showExportModal = false;
+    }
+
+    public function exportExcel($testType = 'all')
+    {
+        $this->closeExportModal();
+
+        $filename = $testType === 'all'
+            ? 'all_test_results_' . now()->format('Y-m-d') . '.xlsx'
+            : $testType . '_test_results_' . now()->format('Y-m-d') . '.xlsx';
+
+        $this->dispatch('toast', type: 'success', message: 'Export Excel berhasil diunduh!');
+
+        return Excel::download(new TestResultsExport($testType), $filename);
     }
 
     public function viewDetails($userId)
@@ -75,12 +95,6 @@ class Laporan extends Component
             ->when($this->search, function ($query) {
                 $query->where('name', 'like', '%' . $this->search . '%')
                     ->orWhere('email', 'like', '%' . $this->search . '%');
-            })
-            ->when($this->filterTestType, function ($query) {
-                $query->whereHas('testSessions', function ($q) {
-                    $q->where('test_type', $this->filterTestType)
-                        ->where('status', 'completed');
-                });
             })
             ->latest('created_at')
             ->paginate(15);

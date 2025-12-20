@@ -203,8 +203,7 @@
                                 <dt class="text-sm font-medium text-gray-500 truncate">
                                     Capacity Task
                                 </dt>
-                                <dd
-                                    class="text-lg font-medium {{ $capacityTest ? 'text-green-900' : 'text-gray-900' }}">
+                                <dd class="text-lg font-medium {{ $capacityTest ? 'text-blue-900' : 'text-blue-900' }}">
                                     Kapasitas Memori
                                 </dd>
                             </dl>

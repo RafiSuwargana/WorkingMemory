@@ -27,6 +27,16 @@ class Login extends Component
         $this->message = '';
         $this->error = '';
 
+        // Check if device is mobile
+        if ($this->isMobileDevice()) {
+            $this->error = 'Akses ditolak. Aplikasi ini hanya dapat diakses melalui laptop atau komputer desktop. Silakan gunakan perangkat yang sesuai.';
+            Log::warning('❌ LOGIN BLOCKED - MOBILE DEVICE', [
+                'email' => $this->email,
+                'user_agent' => request()->userAgent()
+            ]);
+            return;
+        }
+
         // Simple validation
         if (empty($this->email) || !filter_var($this->email, FILTER_VALIDATE_EMAIL)) {
             $this->error = 'Email valid harus diisi';
@@ -63,6 +73,29 @@ class Login extends Component
             Log::error('❌ LOGIN ERROR: ' . $e->getMessage());
             $this->error = 'Terjadi kesalahan: ' . $e->getMessage();
         }
+    }
+
+    /**
+     * Check if current device is mobile
+     */
+    private function isMobileDevice()
+    {
+        $userAgent = request()->userAgent();
+        
+        // List of mobile device keywords
+        $mobileKeywords = [
+            'Mobile', 'Android', 'iPhone', 'iPad', 'iPod', 
+            'BlackBerry', 'Windows Phone', 'webOS', 'Opera Mini',
+            'IEMobile', 'Opera Mobi', 'Samsung', 'Nokia', 'Huawei'
+        ];
+        
+        foreach ($mobileKeywords as $keyword) {
+            if (stripos($userAgent, $keyword) !== false) {
+                return true;
+            }
+        }
+        
+        return false;
     }
 
     public function testLivewire()

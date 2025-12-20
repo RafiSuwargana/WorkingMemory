@@ -14,16 +14,16 @@
         this.editLoading = false;
         this.$wire.closeEditModal();
     }
-}" class="min-h-screen bg-gray-100 py-12 px-4 sm:px-6 lg:px-8">
+}" class="min-h-screen bg-gray-50 py-8 px-4 sm:px-6 lg:px-8">
     <div class="max-w-7xl mx-auto">
         <!-- Header -->
-        <div class="mb-8 flex justify-between items-center">
+        <div class="mb-10 flex justify-between items-center">
             <div>
-                <h1 class="text-3xl font-bold text-gray-900">Kelola Pengguna</h1>
-                <p class="mt-2 text-sm text-gray-600">Daftar semua pengguna peserta</p>
+                <h1 class="text-3xl font-semibold text-gray-900">Kelola Pengguna</h1>
+                <p class="mt-1 text-sm text-gray-500">Daftar semua pengguna peserta</p>
             </div>
             <a href="{{ route('admin.dashboard') }}"
-                class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
+                class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 hover:border-gray-400 transition-colors duration-200">
                 <svg class="h-5 w-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                         d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
@@ -34,12 +34,20 @@
 
         <!-- Search -->
         <div class="mb-6">
-            <input type="text" wire:model.live="search" placeholder="Cari nama atau email..."
-                class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500">
+            <div class="relative">
+                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                </div>
+                <input type="text" wire:model.live="search" placeholder="Cari nama atau email..."
+                    class="pl-10 w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-900 focus:border-gray-900 transition-all duration-200">
+            </div>
         </div>
 
         <!-- Users Table -->
-        <div class="bg-white shadow overflow-hidden sm:rounded-lg">
+        <div class="bg-white border border-gray-200 rounded-lg overflow-hidden">
             <table class="min-w-full divide-y divide-gray-200">
                 <thead class="bg-gray-50">
                     <tr>
@@ -57,34 +65,41 @@
                         </th>
                     </tr>
                 </thead>
-                <tbody class="bg-white divide-y divide-gray-200">
+                <tbody class="bg-white divide-y divide-gray-100">
                     @forelse($users as $user)
-                    <tr>
+                    <tr class="hover:bg-gray-50 transition-colors duration-150">
                         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ $user->name }}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ $user->email }}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 capitalize">{{
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{{ $user->email }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 capitalize">{{
                             $user->roles->first()->name }}
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ $user->created_at->format('d M
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{{ $user->created_at->format('d M
                             Y H:i:s') }}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ $user->updated_at->format('d M
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{{ $user->updated_at->format('d M
                             Y H:i:s') }}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-3">
                             <button x-on:click="openEdit({{ $user->id }})"
-                                class="text-blue-600 hover:text-blue-900 mr-4 disabled:opacity-50">
+                                class="text-gray-700 hover:text-gray-900 disabled:opacity-50 transition-colors duration-150">
                                 Edit
                             </button>
                             <button wire:click="deleteUser({{ $user->id }})"
                                 wire:confirm="Apakah Anda yakin ingin menghapus user ini?"
-                                class="text-red-600 hover:text-red-900">
+                                class="text-red-600 hover:text-red-800 transition-colors duration-150">
                                 Hapus
                             </button>
                         </td>
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="5" class="px-6 py-4 text-center text-sm text-gray-500">
-                            Tidak ada data pengguna
+                        <td colspan="6" class="px-6 py-8 text-center">
+                            <div class="flex flex-col items-center justify-center">
+                                <svg class="h-12 w-12 text-gray-400 mb-3" fill="none" stroke="currentColor"
+                                    viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
+                                </svg>
+                                <p class="text-sm text-gray-500 font-medium">Tidak ada data pengguna</p>
+                            </div>
                         </td>
                     </tr>
                     @endforelse
@@ -121,7 +136,7 @@
 
                             <!-- Loading overlay to prevent stale data flashes -->
                             <div x-show="editLoading" class="mt-4 flex items-center justify-center gap-3 py-10">
-                                <svg class="h-6 w-6 animate-spin text-blue-600" xmlns="http://www.w3.org/2000/svg"
+                                <svg class="h-6 w-6 animate-spin text-gray-900" xmlns="http://www.w3.org/2000/svg"
                                     fill="none" viewBox="0 0 24 24">
                                     <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor"
                                         stroke-width="4"></circle>
@@ -135,21 +150,21 @@
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700">Nama</label>
                                     <input type="text" wire:model.defer="name"
-                                        class="mt-1 w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500">
+                                        class="mt-1 w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-gray-900 focus:border-gray-900">
                                     @error('name')<p class="mt-1 text-sm text-red-600">{{ $message }}</p>@enderror
                                 </div>
 
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700">Email</label>
                                     <input type="email" wire:model.defer="email"
-                                        class="mt-1 w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500">
+                                        class="mt-1 w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-gray-900 focus:border-gray-900">
                                     @error('email')<p class="mt-1 text-sm text-red-600">{{ $message }}</p>@enderror
                                 </div>
 
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700">Role</label>
                                     <select wire:model.defer="role"
-                                        class="mt-1 w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 capitalize">
+                                        class="mt-1 w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-gray-900 focus:border-gray-900 capitalize">
                                         @foreach($roles as $roleOption)
                                         <option class="capitalize" value="{{ $roleOption }}">{{ $roleOption }}</option>
                                         @endforeach
@@ -160,7 +175,7 @@
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700">Password (opsional)</label>
                                     <input type="password" wire:model.defer="password"
-                                        class="mt-1 w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                                        class="mt-1 w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-gray-900 focus:border-gray-900"
                                         autocomplete="new-password">
                                     @error('password')<p class="mt-1 text-sm text-red-600">{{ $message }}</p>@enderror
                                 </div>
@@ -168,7 +183,7 @@
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700">Konfirmasi Password</label>
                                     <input type="password" wire:model.defer="password_confirmation"
-                                        class="mt-1 w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                                        class="mt-1 w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-gray-900 focus:border-gray-900"
                                         autocomplete="new-password">
                                 </div>
                             </div>
@@ -178,12 +193,12 @@
 
                 <div class="bg-gray-50 px-4 py-3 sm:flex sm:flex-row-reverse sm:px-6">
                     <button wire:click="updateUser" wire:loading.attr="disabled" wire:target="updateUser"
-                        class="inline-flex w-full justify-center rounded-md border border-transparent bg-blue-600 px-4 py-2 text-base font-medium text-white shadow-sm hover:bg-blue-700 sm:ml-3 sm:w-auto sm:text-sm disabled:opacity-50">
+                        class="inline-flex w-full justify-center rounded-md border border-transparent bg-gray-900 px-4 py-2 text-base font-medium text-white hover:bg-gray-800 sm:ml-3 sm:w-auto sm:text-sm disabled:opacity-50 transition-colors duration-200">
                         <span wire:loading.remove wire:target="updateUser">Simpan</span>
                         <span wire:loading wire:target="updateUser">Menyimpan...</span>
                     </button>
                     <button x-on:click="closeEdit()" wire:loading.attr="disabled" wire:target="updateUser"
-                        class="mt-3 inline-flex w-full justify-center rounded-md border border-gray-300 bg-white px-4 py-2 text-base font-medium text-gray-700 shadow-sm hover:bg-gray-50 sm:mt-0 sm:w-auto sm:text-sm disabled:opacity-50">
+                        class="mt-3 inline-flex w-full justify-center rounded-md border border-gray-300 bg-white px-4 py-2 text-base font-medium text-gray-700 hover:bg-gray-50 hover:border-gray-400 sm:mt-0 sm:w-auto sm:text-sm disabled:opacity-50 transition-colors duration-200">
                         Batal
                     </button>
                 </div>
